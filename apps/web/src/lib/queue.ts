@@ -1,5 +1,5 @@
 import { Queue } from 'bullmq';
-import { redis } from './redis.js';
+import { redisUrl } from './redis.js';
 
 /**
  * The single context-pipeline queue. The web app enqueues jobs here; the worker
@@ -18,9 +18,11 @@ const globalForQueue = globalThis as unknown as { contextQueue?: Queue<ContextJo
 
 export const QUEUE_NAME = 'context';
 
+const queueConnection = { url: redisUrl, maxRetriesPerRequest: null as null };
+
 export const contextQueue =
   globalForQueue.contextQueue ??
-  new Queue<ContextJobData>(QUEUE_NAME, { connection: redis });
+  new Queue<ContextJobData>(QUEUE_NAME, { connection: queueConnection });
 
 if (process.env.NODE_ENV !== 'production') {
   globalForQueue.contextQueue = contextQueue;

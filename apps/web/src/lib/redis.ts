@@ -11,6 +11,8 @@ const globalForRedis = globalThis as unknown as {
 
 const url = process.env.REDIS_URL ?? 'redis://localhost:6379';
 
+export const redisUrl = url;
+
 export const redis =
   globalForRedis.redis ?? new Redis(url, { maxRetriesPerRequest: null });
 
