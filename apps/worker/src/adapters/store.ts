@@ -1,6 +1,11 @@
+import type { Prisma } from '@prisma/client';
 import type { StorePort } from '@cpe/core';
 import type { ContextPack, RetrievedItem } from '@cpe/shared';
 import { prisma, jobs as jobRepo } from '@cpe/db';
+
+function asJson(value: unknown): Prisma.InputJsonValue {
+  return value as Prisma.InputJsonValue;
+}
 
 /**
  * Prisma-backed store adapter. Persists retrieved items, the final Pack (plus its
@@ -23,8 +28,8 @@ export class PrismaStore implements StorePort {
         sourceUpdatedAt: it.sourceUpdatedAt ? new Date(it.sourceUpdatedAt) : null,
         contentHash: it.contentHash,
         relevance: it.relevance,
-        flags: it.flags ?? {},
-        metadata: (it.metadata ?? {}) as object,
+        flags: asJson(it.flags ?? {}),
+        metadata: asJson(it.metadata ?? {}),
       })),
     });
   }
@@ -40,8 +45,8 @@ export class PrismaStore implements StorePort {
         workspaceId: job.workspaceId,
         permalinkSlug: pack.permalinkSlug,
         confidence: pack.confidence.score,
-        confidenceFactors: pack.confidence.factors as object,
-        packJson: pack as unknown as object,
+        confidenceFactors: asJson(pack.confidence.factors),
+        packJson: asJson(pack),
         contradictions: {
           create: pack.contradictions.map((c) => ({
             itemAId: c.itemAId,
@@ -77,7 +82,7 @@ export class PrismaStore implements StorePort {
         jobId: event.jobId,
         actor: event.actor,
         eventType: event.eventType,
-        payload: (event.payload ?? {}) as object,
+        payload: asJson(event.payload ?? {}),
       },
     });
   }
