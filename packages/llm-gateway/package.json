@@ -1,0 +1,23 @@
+{
+  "name": "@cpe/llm-gateway",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "echo \"(lint) @cpe/llm-gateway\""
+  },
+  "dependencies": {
+    "@cpe/core": "*",
+    "@cpe/shared": "*"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.2"
+  }
+}
