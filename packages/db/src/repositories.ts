@@ -1,4 +1,9 @@
+import type { Prisma } from '@prisma/client';
 import { prisma } from './client.js';
+
+function asJson(value: Record<string, unknown>): Prisma.InputJsonValue {
+  return value as Prisma.InputJsonValue;
+}
 
 /**
  * Thin repository helpers. The pipeline and API talk to these instead of Prisma
@@ -19,7 +24,7 @@ export const jobs = {
   setStatus(id: string, status: string, stageDetail?: Record<string, unknown>) {
     return prisma.contextJob.update({
       where: { id },
-      data: { status, ...(stageDetail ? { stageDetail } : {}) },
+      data: { status, ...(stageDetail ? { stageDetail: asJson(stageDetail) } : {}) },
     });
   },
 
@@ -66,7 +71,9 @@ export const audit = {
     eventType: string;
     payload?: Record<string, unknown>;
   }) {
-    return prisma.auditEvent.create({ data: { ...event, payload: event.payload ?? {} } });
+    return prisma.auditEvent.create({
+      data: { ...event, payload: asJson(event.payload ?? {}) },
+    });
   },
 };
 
