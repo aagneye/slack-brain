@@ -1,0 +1,197 @@
+// Context Pack Engine — data model (PostgreSQL + pgvector).
+// See docs/02-architecture.md §7 for the full design rationale.
+
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  directUrl  = env("DIRECT_URL")
+  extensions = [vector, pgcrypto]
+}
+
+model Workspace {
+  id          String      @id @default(uuid())
+  slackTeamId String      @unique @map("slack_team_id")
+  name        String
+  createdAt   DateTime    @default(now()) @map("created_at")
+  users       AppUser[]
+  connectors  Connector[]
+  jobs        ContextJob[]
+  audit       AuditEvent[]
+
+  @@map("workspace")
+}
+
+model AppUser {
+  id          String   @id @default(uuid())
+  workspaceId String   @map("workspace_id")
+  slackUserId String   @map("slack_user_id")
+  email       String?
+  displayName String?  @map("display_name")
+  role        String   @default("member") // member | admin
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+  jobs        ContextJob[]
+  feedback    Feedback[]
+
+  @@unique([workspaceId, slackUserId])
+  @@map("app_user")
+}
+
+model Connector {
+  id          String   @id @default(uuid())
+  workspaceId String   @map("workspace_id")
+  kind        String // slack | github | jira | confluence | notion | deploy | incident
+  status      String   @default("active") // active | error | disabled
+  scopes      String[] @default([])
+  tokenRef    String   @map("token_ref") // pointer to secret store, NOT the token
+  config      Json     @default("{}")
+  lastHealth  DateTime? @map("last_health")
+  createdAt   DateTime @default(now()) @map("created_at")
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+
+  @@map("connector")
+}
+
+model ContextJob {
+  id            String   @id @default(uuid())
+  workspaceId   String   @map("workspace_id")
+  requestedBy   String   @map("requested_by")
+  taskText      String   @map("task_text")
+  intent        String?
+  entities      Json     @default("[]")
+  timeWindow    Json?    @map("time_window")
+  status        String   @default("queued")
+  stageDetail   Json     @default("{}") @map("stage_detail")
+  error         String?
+  sourceChannel String?  @map("source_channel")
+  threadTs      String?  @map("thread_ts")
+  createdAt     DateTime @default(now()) @map("created_at")
+  completedAt   DateTime? @map("completed_at")
+
+  workspace     Workspace      @relation(fields: [workspaceId], references: [id])
+  user          AppUser        @relation(fields: [requestedBy], references: [id])
+  pack          ContextPack?
+  items         RetrievedItem[]
+  audit         AuditEvent[]
+
+  @@index([workspaceId, createdAt])
+  @@index([status])
+  @@map("context_job")
+}
+
+model ContextPack {
+  id                String   @id @default(uuid())
+  jobId             String   @unique @map("job_id")
+  workspaceId       String   @map("workspace_id")
+  permalinkSlug     String   @unique @map("permalink_slug")
+  confidence        Int
+  confidenceFactors Json     @default("{}") @map("confidence_factors")
+  packJson          Json     @map("pack_json")
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  job             ContextJob      @relation(fields: [jobId], references: [id])
+  contradictions  Contradiction[]
+  missingInfo     MissingInfo[]
+  sends           LlmSend[]
+
+  @@index([workspaceId, createdAt])
+  @@map("context_pack")
+}
+
+model RetrievedItem {
+  id              String   @id @default(uuid())
+  jobId           String   @map("job_id")
+  source          String
+  externalId      String   @map("external_id")
+  type            String
+  title           String?
+  body            String?
+  url             String?
+  author          String?
+  sourceCreatedAt DateTime? @map("source_created_at")
+  sourceUpdatedAt DateTime? @map("source_updated_at")
+  contentHash     String?  @map("content_hash")
+  relevance       Float?
+  flags           Json     @default("{}")
+  metadata        Json     @default("{}")
+  // embedding vector(1536) is added via raw migration (see prisma/sql/embedding.sql)
+  createdAt       DateTime @default(now()) @map("created_at")
+  job             ContextJob @relation(fields: [jobId], references: [id])
+
+  @@index([jobId])
+  @@index([contentHash])
+  @@map("retrieved_item")
+}
+
+model Contradiction {
+  id         String  @id @default(uuid())
+  packId     String  @map("pack_id")
+  itemAId    String? @map("item_a")
+  itemBId    String? @map("item_b")
+  claimA     String? @map("claim_a")
+  claimB     String? @map("claim_b")
+  reason     String?
+  confidence Float?
+  pack       ContextPack @relation(fields: [packId], references: [id])
+
+  @@map("contradiction")
+}
+
+model MissingInfo {
+  id          String @id @default(uuid())
+  packId      String @map("pack_id")
+  requirement String
+  reason      String?
+  pack        ContextPack @relation(fields: [packId], references: [id])
+
+  @@map("missing_info")
+}
+
+model LlmSend {
+  id            String   @id @default(uuid())
+  packId        String   @map("pack_id")
+  model         String
+  tokenBudget   Int?     @map("token_budget")
+  includedItems Json     @default("[]") @map("included_items")
+  status        String // sent | answered | error
+  responseRef   String?  @map("response_ref")
+  costCents     Int?     @map("cost_cents")
+  createdAt     DateTime @default(now()) @map("created_at")
+  pack          ContextPack @relation(fields: [packId], references: [id])
+
+  @@map("llm_send")
+}
+
+model Feedback {
+  id          String   @id @default(uuid())
+  workspaceId String   @map("workspace_id")
+  userId      String   @map("user_id")
+  targetType  String   @map("target_type") // pack | item
+  targetId    String   @map("target_id")
+  rating      Int // +1 / -1
+  note        String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  user        AppUser  @relation(fields: [userId], references: [id])
+
+  @@map("feedback")
+}
+
+model AuditEvent {
+  id          BigInt   @id @default(autoincrement())
+  workspaceId String   @map("workspace_id")
+  actor       String?
+  jobId       String?  @map("job_id")
+  eventType   String   @map("event_type")
+  payload     Json     @default("{}")
+  createdAt   DateTime @default(now()) @map("created_at")
+  workspace   Workspace   @relation(fields: [workspaceId], references: [id])
+  job         ContextJob? @relation(fields: [jobId], references: [id])
+
+  @@index([workspaceId, createdAt])
+  @@index([jobId])
+  @@map("audit_event")
+}
