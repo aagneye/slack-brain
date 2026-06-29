@@ -30,7 +30,7 @@ export async function POST(req: Request, { params }: { params: { id: string } })
       ...pack,
       sections: Object.fromEntries(
         Object.entries(pack.sections).map(([k, v]) => [k, filterSection(v)]),
-      ) as ContextPack['sections'],
+      ) as unknown as ContextPack['sections'],
     };
   }
 
