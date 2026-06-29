@@ -1,0 +1,30 @@
+{
+  "name": "context-pack-engine",
+  "version": "0.1.0",
+  "private": true,
+  "description": "AI Context Verification & Readiness Layer — builds a verified Context Pack before any LLM does work.",
+  "license": "MIT",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test",
+    "format": "prettier --write \"**/*.{ts,tsx,md,json}\"",
+    "db:push": "npm run db:push -w @cpe/db",
+    "db:migrate": "npm run db:migrate -w @cpe/db"
+  },
+  "devDependencies": {
+    "prettier": "^3.3.3",
+    "turbo": "^2.1.0",
+    "typescript": "^5.6.2"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "packageManager": "npm@10.9.2"
+}
