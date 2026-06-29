@@ -34,7 +34,9 @@ export function dedupe(items: RetrievedItem[], opts: DedupeOptions = {}): Dedupe
       const head = cluster[0] as RetrievedItem;
       const sameHash =
         !!item.contentHash && !!head.contentHash && item.contentHash === head.contentHash;
-      const sameUrl = !!item.url && item.url === head.url;
+      const hashConflict =
+        !!item.contentHash && !!head.contentHash && item.contentHash !== head.contentHash;
+      const sameUrl = !hashConflict && !!item.url && item.url === head.url;
       const similar =
         item.embedding && head.embedding
           ? cosineSimilarity(item.embedding, head.embedding) >= threshold
