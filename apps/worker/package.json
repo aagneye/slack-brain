@@ -1,0 +1,27 @@
+{
+  "name": "@cpe/worker",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "node --watch --experimental-strip-types src/index.ts",
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/index.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "echo \"(lint) @cpe/worker\""
+  },
+  "dependencies": {
+    "@cpe/connectors": "*",
+    "@cpe/core": "*",
+    "@cpe/db": "*",
+    "@cpe/llm-gateway": "*",
+    "@cpe/shared": "*",
+    "bullmq": "^5.13.0",
+    "ioredis": "^5.4.1"
+  },
+  "devDependencies": {
+    "@types/node": "^22.5.5",
+    "typescript": "^5.6.2"
+  }
+}
