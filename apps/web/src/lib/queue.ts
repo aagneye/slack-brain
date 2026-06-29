@@ -20,16 +20,17 @@ export const QUEUE_NAME = 'context';
 
 const queueConnection = { url: redisUrl, maxRetriesPerRequest: null as null };
 
-export const contextQueue =
-  globalForQueue.contextQueue ??
-  new Queue<ContextJobData>(QUEUE_NAME, { connection: queueConnection });
-
-if (process.env.NODE_ENV !== 'production') {
-  globalForQueue.contextQueue = contextQueue;
+function getContextQueue(): Queue<ContextJobData> {
+  if (!globalForQueue.contextQueue) {
+    globalForQueue.contextQueue = new Queue<ContextJobData>(QUEUE_NAME, {
+      connection: queueConnection,
+    });
+  }
+  return globalForQueue.contextQueue;
 }
 
 export function enqueueContextJob(data: ContextJobData) {
-  return contextQueue.add('build-pack', data, {
+  return getContextQueue().add('build-pack', data, {
     jobId: data.jobId,
     removeOnComplete: 100,
     removeOnFail: 50,

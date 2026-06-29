@@ -1,27 +1,35 @@
 import Redis from 'ioredis';
 
 /**
- * Shared ioredis connections. BullMQ requires `maxRetriesPerRequest: null`.
- * Cached on globalThis to survive Next.js hot reloads.
+ * Redis helpers for the web app. Connections are created lazily so `next build`
+ * does not require a running Redis instance.
  */
 const globalForRedis = globalThis as unknown as {
   redis?: Redis;
   redisSub?: Redis;
 };
 
-const url = process.env.REDIS_URL ?? 'redis://localhost:6379';
+export const redisUrl = process.env.REDIS_URL ?? 'redis://localhost:6379';
 
-export const redisUrl = url;
+export function getRedis(): Redis {
+  if (!globalForRedis.redis) {
+    globalForRedis.redis = new Redis(redisUrl, {
+      maxRetriesPerRequest: null,
+      lazyConnect: true,
+    });
+  }
+  return globalForRedis.redis;
+}
 
-export const redis =
-  globalForRedis.redis ?? new Redis(url, { maxRetriesPerRequest: null });
-
-/** Dedicated connection for pub/sub subscriptions (cannot be shared with commands). */
-export const redisSub = globalForRedis.redisSub ?? new Redis(url, { maxRetriesPerRequest: null });
-
-if (process.env.NODE_ENV !== 'production') {
-  globalForRedis.redis = redis;
-  globalForRedis.redisSub = redisSub;
+/** Dedicated pub/sub connection (cannot share the command connection). */
+export function getRedisSub(): Redis {
+  if (!globalForRedis.redisSub) {
+    globalForRedis.redisSub = new Redis(redisUrl, {
+      maxRetriesPerRequest: null,
+      lazyConnect: true,
+    });
+  }
+  return globalForRedis.redisSub;
 }
 
 /** Channel name for a job's progress stream. */
