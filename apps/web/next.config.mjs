@@ -1,6 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  poweredByHeader: false,
   // Transpile the workspace packages (they ship raw TS with NodeNext `.js` import paths).
   transpilePackages: [
     '@cpe/shared',
@@ -12,6 +13,23 @@ const nextConfig = {
   ],
   experimental: {
     serverComponentsExternalPackages: ['@prisma/client', 'bullmq', 'ioredis'],
+    instrumentationHook: true,
+  },
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'X-Content-Type-Options', value: 'nosniff' },
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+          {
+            key: 'Permissions-Policy',
+            value: 'camera=(), microphone=(), geolocation=()',
+          },
+        ],
+      },
+    ];
   },
   webpack: (config) => {
     // Workspace packages use `.js` extensions in TS sources (NodeNext ESM).
