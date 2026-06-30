@@ -111,9 +111,8 @@ Pack from the dashboard or `/contextpack` in Slack.
 
 ## Setup & deployment
 
-See **[setup.md](setup.md)** for the full guide: Slack app + OAuth, Neon Postgres (`pgvector`),
-Redis, environment variables, LLM API keys, ngrok for local dev, and deploying the web app to
-**Vercel** and the worker to **Render**.
+- **Local dev:** [setup.md](setup.md) — Slack app, Neon/Docker Postgres, Redis, env vars
+- **Production:** [PRODUCTION.md](PRODUCTION.md) — Vercel + Render + Neon + Upstash checklist
 
 ## Status
 

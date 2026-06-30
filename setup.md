@@ -246,6 +246,9 @@ trigger a Context Pack from the dashboard or `/contextpack` in Slack.
 
 ## 8. Deployment
 
+> **Full production checklist:** see **[PRODUCTION.md](../PRODUCTION.md)** — Vercel, Render, Neon,
+> Upstash, env vars, Slack URL updates, and smoke tests.
+
 ### 8.1 Web portal → Vercel
 
 1. Import the GitHub repo into Vercel.
