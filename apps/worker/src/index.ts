@@ -6,6 +6,7 @@ import { logger } from '@cpe/shared';
 import type { ContextJobData } from './types.js';
 import { buildPipelineDeps } from './deps.js';
 import { postPackToSlack } from './adapters/slack-notify.js';
+import { validateWorkerProductionEnv } from './env.js';
 
 /**
  * Worker entrypoint.
@@ -14,6 +15,8 @@ import { postPackToSlack } from './adapters/slack-notify.js';
  * publishing progress and persisting the resulting Pack. Failures mark the job
  * failed and emit a terminal progress event so the UI stops waiting.
  */
+await validateWorkerProductionEnv();
+
 const redisUrl = process.env.REDIS_URL ?? 'redis://localhost:6379';
 const connection = new Redis(redisUrl, { maxRetriesPerRequest: null });
 
