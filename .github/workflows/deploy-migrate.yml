@@ -1,0 +1,23 @@
+# Run Prisma migrations against a production database.
+# Trigger manually after setting repository secrets (see PRODUCTION.md).
+name: Deploy — migrate database
+
+on:
+  workflow_dispatch:
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+      - name: Install
+        run: npm ci
+      - name: Migrate deploy
+        run: npm run db:migrate:deploy -w @cpe/db
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DIRECT_URL: ${{ secrets.DIRECT_URL }}
