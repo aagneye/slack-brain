@@ -10,6 +10,7 @@ import Slack from 'next-auth/providers/slack';
  * of the app can scope every query to that workspace.
  */
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  trustHost: true,
   providers: [
     Slack({
       clientId: process.env.SLACK_CLIENT_ID,
