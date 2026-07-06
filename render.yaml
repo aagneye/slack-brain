@@ -17,7 +17,7 @@ services:
         value: production
       - key: APP_BASE_URL
         sync: false
-        # Set to your Vercel URL, e.g. https://slack-brain.vercel.app
+        # Set to https://creator.tmi.production (Vercel custom domain)
       - key: DATABASE_URL
         sync: false
       - key: DIRECT_URL

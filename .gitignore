@@ -14,6 +14,7 @@ out/
 .env
 .env.local
 .env.*.local
+.env.vercel
 *.pem
 
 # Logs
@@ -33,5 +34,3 @@ packages/db/prisma/*.db
 
 # Test / coverage
 coverage/
-
-.env

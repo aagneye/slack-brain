@@ -342,19 +342,21 @@ Neon (DB) and Upstash (Redis) are shared between both.
 
 ### 8.1 Slack Request URLs (paste into api.slack.com)
 
-After Vercel deploy, replace `YOUR-VERCEL-URL` with your domain (e.g. `slack-brain.vercel.app`):
+Production domain: **`https://creator.tmi.production`**
 
 | Slack setting | Request URL |
 |---|---|
-| OAuth redirect | `https://YOUR-VERCEL-URL/api/auth/callback/slack` |
-| Slash command `/contextpack` | `https://YOUR-VERCEL-URL/api/slack/commands` |
-| Interactivity | `https://YOUR-VERCEL-URL/api/slack/interactions` |
-| Event subscriptions | `https://YOUR-VERCEL-URL/api/slack/events` |
+| OAuth redirect | `https://creator.tmi.production/api/auth/callback/slack` |
+| Slash command `/contextpack` | `https://creator.tmi.production/api/slack/commands` |
+| Interactivity | `https://creator.tmi.production/api/slack/interactions` |
+| Event subscriptions | `https://creator.tmi.production/api/slack/events` |
+
+**Import env to Vercel:** run `npm run env:vercel` → upload `.env.vercel` in Vercel → Environment Variables → Import .env (file is gitignored; never commit it).
 
 Verify URLs from your deploy:
 
 ```bash
-curl https://YOUR-VERCEL-URL/api/health
+curl https://creator.tmi.production/api/health
 # → "slack": { "slashCommand": "https://...", ... }
 ```
 
@@ -365,7 +367,7 @@ Re-install the Slack app after changing URLs. Use `/contextpack` in a **channel*
 1. Import the GitHub repo at [vercel.com/new](https://vercel.com/new).
 2. **Root Directory:** `apps/web`. Framework: Next.js.
 3. Add env vars from [`.env.production.example`](.env.production.example).
-4. Set `APP_BASE_URL` and `AUTH_URL` to `https://YOUR-VERCEL-URL` (no trailing slash).
+4. Set `APP_BASE_URL` and `AUTH_URL` to `https://creator.tmi.production` (no trailing slash).
 5. Deploy → confirm `GET /api/health` returns `"status": "ok"`.
 
 `apps/web/vercel.json` configures the monorepo install/build from the repo root.

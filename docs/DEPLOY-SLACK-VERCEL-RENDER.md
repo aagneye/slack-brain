@@ -13,7 +13,40 @@ Slack  ──POST──►  Vercel (apps/web)     ──enqueue──►  Upstas
                    Neon Postgres  ◄──────────────────────────┘
 ```
 
-Replace `YOUR-VERCEL-URL` below with your real domain, e.g. `slack-brain.vercel.app` or a custom domain.
+Replace `YOUR-VERCEL-URL` below with your real domain. This project uses **`creator.tmi.production`** as the production custom domain.
+
+---
+
+## Import env vars into Vercel (easiest)
+
+**Do not commit your real `.env` file** — it contains secrets. Instead:
+
+```bash
+# From repo root — reads .env, writes .env.vercel with production URL overrides
+npm run env:vercel
+```
+
+This creates **`.env.vercel`** (gitignored) with:
+
+- `NODE_ENV=production`
+- `APP_BASE_URL=https://creator.tmi.production`
+- `AUTH_URL=https://creator.tmi.production`
+- All other keys copied from your local `.env`
+
+Then in Vercel:
+
+1. **Project → Settings → Environment Variables**
+2. Click **Import .env** (or paste bulk import)
+3. Upload **`.env.vercel`**
+4. Scope: **Production** (and Preview if you want)
+
+Before importing, fill in any empty values in `.env.vercel`:
+
+- `AUTH_SECRET` — run `openssl rand -base64 32`
+- `SLACK_USER_TOKEN` — user token with `search:read`
+- `OLLAMA_BASE_URL` — if using Ollama in production
+
+Committed safe templates (no secrets): [`.env.vercel.example`](../.env.vercel.example), [`.env.production.example`](../.env.production.example).
 
 ---
 
@@ -46,7 +79,7 @@ Vercel hosts the Next.js app **and** every Slack webhook route.
    | Variable | Example / notes |
    |---|---|
    | `NODE_ENV` | `production` |
-   | `APP_BASE_URL` | `https://YOUR-VERCEL-URL` — **no trailing slash** |
+   | `APP_BASE_URL` | `https://creator.tmi.production` — **no trailing slash** |
    | `AUTH_URL` | same as `APP_BASE_URL` |
    | `AUTH_SECRET` | `openssl rand -base64 32` |
    | `DATABASE_URL` | Neon **pooled** URL |
@@ -65,10 +98,11 @@ Vercel hosts the Next.js app **and** every Slack webhook route.
    | `EMBEDDINGS_PROVIDER` | `ollama` or `openai` |
 
 4. Click **Deploy**. Wait for the build to finish.
-5. Smoke test:
+5. **Domains:** Vercel → Project → Settings → Domains → add `creator.tmi.production` and point DNS per Vercel instructions.
+6. Smoke test:
 
    ```bash
-   curl https://YOUR-VERCEL-URL/api/health
+   curl https://creator.tmi.production/api/health
    ```
 
    Expect `"status": "ok"` and a `slack` object with your webhook URLs:
@@ -77,10 +111,10 @@ Vercel hosts the Next.js app **and** every Slack webhook route.
    {
      "status": "ok",
      "slack": {
-       "oauthRedirect": "https://YOUR-VERCEL-URL/api/auth/callback/slack",
-       "slashCommand": "https://YOUR-VERCEL-URL/api/slack/commands",
-       "interactions": "https://YOUR-VERCEL-URL/api/slack/interactions",
-       "events": "https://YOUR-VERCEL-URL/api/slack/events"
+       "oauthRedirect": "https://creator.tmi.production/api/auth/callback/slack",
+       "slashCommand": "https://creator.tmi.production/api/slack/commands",
+       "interactions": "https://creator.tmi.production/api/slack/interactions",
+       "events": "https://creator.tmi.production/api/slack/events"
      }
    }
    ```
@@ -131,14 +165,14 @@ worker ready, listening on "context" queue
 
 Open [api.slack.com/apps](https://api.slack.com/apps) → your **slack brain** app.
 
-Copy these URLs exactly (replace `YOUR-VERCEL-URL`):
+Copy these URLs exactly:
 
 | Slack setting | Location in Slack app | Request URL |
 |---|---|---|
-| **OAuth redirect** | OAuth & Permissions → Redirect URLs | `https://YOUR-VERCEL-URL/api/auth/callback/slack` |
-| **Slash command** | Slash Commands → `/contextpack` → Request URL | `https://YOUR-VERCEL-URL/api/slack/commands` |
-| **Interactivity** | Interactivity & Shortcuts → Request URL | `https://YOUR-VERCEL-URL/api/slack/interactions` |
-| **Event subscriptions** | Event Subscriptions → Request URL | `https://YOUR-VERCEL-URL/api/slack/events` |
+| **OAuth redirect** | OAuth & Permissions → Redirect URLs | `https://creator.tmi.production/api/auth/callback/slack` |
+| **Slash command** | Slash Commands → `/contextpack` → Request URL | `https://creator.tmi.production/api/slack/commands` |
+| **Interactivity** | Interactivity & Shortcuts → Request URL | `https://creator.tmi.production/api/slack/interactions` |
+| **Event subscriptions** | Event Subscriptions → Request URL | `https://creator.tmi.production/api/slack/events` |
 
 ### Slash command details
 
