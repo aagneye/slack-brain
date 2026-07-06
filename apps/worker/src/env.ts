@@ -1,5 +1,10 @@
 import { prisma } from '@cpe/db';
-import { assertProductionReady, loadConfig, logger } from '@cpe/shared';
+import {
+  assertProductionReady,
+  getRedisOptions,
+  loadConfig,
+  logger,
+} from '@cpe/shared';
 import Redis from 'ioredis';
 
 /**
@@ -15,7 +20,7 @@ export async function validateWorkerProductionEnv(): Promise<void> {
   await prisma.$queryRaw`SELECT 1`;
 
   const redisUrl = process.env.REDIS_URL ?? config.REDIS_URL;
-  const redis = new Redis(redisUrl, { maxRetriesPerRequest: null, lazyConnect: true });
+  const redis = new Redis(redisUrl, getRedisOptions(redisUrl));
   try {
     await redis.connect();
     await redis.ping();

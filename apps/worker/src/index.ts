@@ -2,7 +2,7 @@ import { Worker } from 'bullmq';
 import Redis from 'ioredis';
 import { runPipeline } from '@cpe/core';
 import { jobs as jobRepo } from '@cpe/db';
-import { logger } from '@cpe/shared';
+import { getBullMqConnection, getRedisOptions, logger } from '@cpe/shared';
 import type { ContextJobData } from './types.js';
 import { buildPipelineDeps } from './deps.js';
 import { postPackToSlack } from './adapters/slack-notify.js';
@@ -18,7 +18,7 @@ import { validateWorkerProductionEnv } from './env.js';
 await validateWorkerProductionEnv();
 
 const redisUrl = process.env.REDIS_URL ?? 'redis://localhost:6379';
-const connection = new Redis(redisUrl, { maxRetriesPerRequest: null });
+const connection = new Redis(redisUrl, getRedisOptions(redisUrl, { lazyConnect: false }));
 
 const deps = buildPipelineDeps(connection);
 
@@ -44,7 +44,7 @@ const worker = new Worker<ContextJobData>(
       throw err;
     }
   },
-  { connection: { url: redisUrl, maxRetriesPerRequest: null }, concurrency: Number(process.env.WORKER_CONCURRENCY ?? 4) },
+  { connection: getBullMqConnection(redisUrl), concurrency: Number(process.env.WORKER_CONCURRENCY ?? 4) },
 );
 
 worker.on('ready', () => logger.info('worker ready, listening on "context" queue'));

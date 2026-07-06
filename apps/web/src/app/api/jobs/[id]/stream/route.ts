@@ -1,4 +1,5 @@
 import Redis from 'ioredis';
+import { getRedisOptions } from '@cpe/shared';
 import { progressChannel } from '@/lib/redis';
 
 export const dynamic = 'force-dynamic';
@@ -14,9 +15,8 @@ export const runtime = 'nodejs';
 export async function GET(_req: Request, { params }: { params: { id: string } }) {
   const jobId = params.id;
   const channel = progressChannel(jobId);
-  const sub = new Redis(process.env.REDIS_URL ?? 'redis://localhost:6379', {
-    maxRetriesPerRequest: null,
-  });
+  const redisUrl = process.env.REDIS_URL ?? 'redis://localhost:6379';
+  const sub = new Redis(redisUrl, getRedisOptions(redisUrl));
 
   const stream = new ReadableStream({
     async start(controller) {

@@ -1,4 +1,5 @@
 import Redis from 'ioredis';
+import { getRedisOptions } from '@cpe/shared';
 
 /**
  * Redis helpers for the web app. Connections are created lazily so `next build`
@@ -13,10 +14,7 @@ export const redisUrl = process.env.REDIS_URL ?? 'redis://localhost:6379';
 
 export function getRedis(): Redis {
   if (!globalForRedis.redis) {
-    globalForRedis.redis = new Redis(redisUrl, {
-      maxRetriesPerRequest: null,
-      lazyConnect: true,
-    });
+    globalForRedis.redis = new Redis(redisUrl, getRedisOptions(redisUrl));
   }
   return globalForRedis.redis;
 }
@@ -24,10 +22,7 @@ export function getRedis(): Redis {
 /** Dedicated pub/sub connection (cannot share the command connection). */
 export function getRedisSub(): Redis {
   if (!globalForRedis.redisSub) {
-    globalForRedis.redisSub = new Redis(redisUrl, {
-      maxRetriesPerRequest: null,
-      lazyConnect: true,
-    });
+    globalForRedis.redisSub = new Redis(redisUrl, getRedisOptions(redisUrl));
   }
   return globalForRedis.redisSub;
 }

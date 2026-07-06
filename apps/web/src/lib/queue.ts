@@ -1,4 +1,5 @@
 import { Queue } from 'bullmq';
+import { getBullMqConnection } from '@cpe/shared';
 import { redisUrl } from './redis.js';
 
 /**
@@ -18,7 +19,7 @@ const globalForQueue = globalThis as unknown as { contextQueue?: Queue<ContextJo
 
 export const QUEUE_NAME = 'context';
 
-const queueConnection = { url: redisUrl, maxRetriesPerRequest: null as null };
+const queueConnection = getBullMqConnection(redisUrl);
 
 function getContextQueue(): Queue<ContextJobData> {
   if (!globalForQueue.contextQueue) {
