@@ -1,19 +1,15 @@
 import type { LLMPort } from '@cpe/core';
 
-/**
- * Ollama chat adapter — uses the OpenAI-compatible API at /v1/chat/completions.
- * No API key required; runs locally or on a private host.
- */
+/** Ollama /api/chat adapter (LLMPort) for local or self-hosted models. */
 export interface OllamaProviderOptions {
-  /** Base URL without trailing slash, e.g. http://localhost:11434 */
   baseUrl?: string;
-  /** Default model when request uses model id "ollama" */
   defaultModel?: string;
 }
 
 interface ChatResponse {
-  choices?: Array<{ message?: { content?: string } }>;
   message?: { content?: string };
+  eval_count?: number;
+  prompt_eval_count?: number;
 }
 
 export class OllamaProvider implements LLMPort {
@@ -25,13 +21,14 @@ export class OllamaProvider implements LLMPort {
       /\/$/,
       '',
     );
-    this.defaultModel = opts.defaultModel ?? process.env.OLLAMA_MODEL ?? 'llama3.2';
+    this.defaultModel = opts.defaultModel ?? process.env.OLLAMA_CHAT_MODEL ?? 'llama3.2';
   }
 
-  resolveModel(requested: string): string {
-    if (requested === 'ollama' || requested === 'ollama:default') return this.defaultModel;
-    if (requested.startsWith('ollama:')) return requested.slice('ollama:'.length);
-    return requested;
+  /** Maps gateway model ids (`ollama`, `ollama:llama3.2`) to an Ollama model name. */
+  resolveModel(model: string): string {
+    if (model === 'ollama') return this.defaultModel;
+    if (model.startsWith('ollama:')) return model.slice('ollama:'.length);
+    return model;
   }
 
   async complete(input: {
@@ -41,43 +38,28 @@ export class OllamaProvider implements LLMPort {
     maxTokens?: number;
   }): Promise<{ text: string; usage?: { inputTokens: number; outputTokens: number } }> {
     const model = this.resolveModel(input.model);
-    const messages = [
-      ...(input.system ? [{ role: 'system' as const, content: input.system }] : []),
-      { role: 'user' as const, content: input.prompt },
-    ];
-
-    const res = await fetch(`${this.baseUrl}/v1/chat/completions`, {
+    const res = await fetch(`${this.baseUrl}/api/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model,
-        messages,
         stream: false,
+        messages: [
+          ...(input.system ? [{ role: 'system', content: input.system }] : []),
+          { role: 'user', content: input.prompt },
+        ],
         options: { num_predict: input.maxTokens ?? 1024 },
       }),
     });
-
-    if (!res.ok) {
-      const detail = await res.text().catch(() => '');
-      throw new Error(`ollama completion failed: ${res.status} ${detail}`.trim());
-    }
-
+    if (!res.ok) throw new Error(`ollama completion failed: ${res.status} ${res.statusText}`);
     const json = (await res.json()) as ChatResponse;
-    const text =
-      json.choices?.[0]?.message?.content?.trim() ??
-      json.message?.content?.trim() ??
-      '';
-
-    return { text };
-  }
-
-  async health(): Promise<{ ok: boolean; detail?: string }> {
-    try {
-      const res = await fetch(`${this.baseUrl}/api/tags`);
-      if (!res.ok) return { ok: false, detail: `HTTP ${res.status}` };
-      return { ok: true };
-    } catch (e) {
-      return { ok: false, detail: (e as Error).message };
-    }
+    const text = json.message?.content ?? '';
+    return {
+      text,
+      usage:
+        json.prompt_eval_count != null && json.eval_count != null
+          ? { inputTokens: json.prompt_eval_count, outputTokens: json.eval_count }
+          : undefined,
+    };
   }
 }
