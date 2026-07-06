@@ -72,7 +72,8 @@ DATABASE_URL="..." DIRECT_URL="..." npm run db:migrate:deploy
    | `SLACK_CLIENT_ID` | Slack app |
    | `SLACK_CLIENT_SECRET` | Slack app |
    | `SLACK_SIGNING_SECRET` | Slack app |
-   | `SLACK_BOT_TOKEN` | Slack app (install to workspace) |
+   | `SLACK_BOT_TOKEN` | Slack app | Bot token (`xoxb-`) — post Pack cards, not search |
+   | `SLACK_USER_TOKEN` | Slack user OAuth | User token (`xoxp-`) with `search:read` for retrieval |
    | `GITHUB_TOKEN` | GitHub PAT |
    | `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` | at least one |
    | `EMBEDDINGS_PROVIDER` | `openai` |

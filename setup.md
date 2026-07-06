@@ -123,15 +123,28 @@ Agent** (slash command, progress, Pack card, Send-to-AI buttons).
 1. Go to https://api.slack.com/apps → **Create New App** → **From scratch**.
 2. Name it `Context Pack Engine`, pick your dev workspace.
 
-### 3.2 OAuth & Permissions (Bot Token Scopes)
+### 3.2 OAuth & Permissions — two tokens, two jobs
 
-Add at minimum:
+Slack uses **separate tokens** for posting vs searching. Do not put `search:read` on the bot and
+expect `search.messages` to work — Slack requires a **user token** (`xoxp-`) for search.
+
+**Bot Token Scopes** (install app → copy `SLACK_BOT_TOKEN` / `xoxb-`):
 
 - `commands` — slash command
 - `chat:write` — post + update progress/Pack messages
 - `users:read`, `users:read.email` — resolve the requesting user
-- `search:read` — Slack search (real-time search of messages)
-- `channels:history`, `groups:history` — read referenced threads (as permitted)
+- `channels:history`, `groups:history` — read thread context when posting (as permitted)
+
+**User Token Scopes** (create a user token with `search:read` → `SLACK_USER_TOKEN` / `xoxp-`):
+
+- `search:read` — `search.messages` (scoped to what **that user** can read)
+
+Ways to obtain a user search token:
+
+1. **Dev:** Slack app → **OAuth & Permissions** → User Token Scopes → add `search:read` →
+   **Install to Workspace** → copy the **User OAuth Token** (`xoxp-`) into `SLACK_USER_TOKEN`.
+2. **Portal:** After sign-in, open **Connectors** → **Slack Search** → paste your `xoxp-` token
+   (stored per user for that workspace).
 
 Set the **Redirect URL** for OAuth:
 
@@ -169,7 +182,8 @@ From **Basic Information** and **OAuth & Permissions**:
 SLACK_CLIENT_ID="..."
 SLACK_CLIENT_SECRET="..."
 SLACK_SIGNING_SECRET="..."          # verifies inbound Slack requests
-SLACK_BOT_TOKEN="xoxb-..."          # after installing the app to your workspace
+SLACK_BOT_TOKEN="xoxb-..."          # bot only: post/update messages (NOT for search)
+SLACK_USER_TOKEN="xoxp-..."         # user token with search:read for message retrieval
 ```
 
 ### 3.8 Expose localhost during development
@@ -295,7 +309,8 @@ Render pre-deploy step.
 | `SLACK_CLIENT_ID` | yes | §3.7 | OAuth / Sign in with Slack |
 | `SLACK_CLIENT_SECRET` | yes | §3.7 | OAuth |
 | `SLACK_SIGNING_SECRET` | yes | §3.7 | Verify inbound Slack requests |
-| `SLACK_BOT_TOKEN` | yes | §3.7 | Post/update Slack messages |
+| `SLACK_BOT_TOKEN` | yes | §3.7 | Post/update Slack messages (xoxb-) |
+| `SLACK_USER_TOKEN` | for search | §3.7 | Slack message search (xoxp-, search:read) |
 | `GITHUB_TOKEN` | for GitHub | §4 | GitHub retrieval |
 | `OPENAI_API_KEY` | one of | §5 | LLM + embeddings |
 | `ANTHROPIC_API_KEY` | one of | §5 | LLM |
