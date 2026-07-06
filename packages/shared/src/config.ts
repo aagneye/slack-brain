@@ -16,6 +16,8 @@ const envSchema = z.object({
   SLACK_CLIENT_SECRET: z.string().optional(),
   SLACK_SIGNING_SECRET: z.string().optional(),
   SLACK_BOT_TOKEN: z.string().optional(),
+  /** User token (xoxp-) with search:read — required for Slack retrieval; NOT interchangeable with bot token. */
+  SLACK_USER_TOKEN: z.string().optional(),
 
   GITHUB_TOKEN: z.string().optional(),
 

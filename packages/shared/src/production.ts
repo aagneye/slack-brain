@@ -51,6 +51,13 @@ export function getProductionChecks(
 
   if (role === 'worker') {
     require('GITHUB_TOKEN', env.GITHUB_TOKEN);
+    checks.push({
+      name: 'SLACK_USER_TOKEN',
+      ok: !!env.SLACK_USER_TOKEN,
+      message: env.SLACK_USER_TOKEN
+        ? undefined
+        : 'workspace fallback for search; per-user tokens can be set in the portal',
+    });
   }
 
   const hasLlm = !!(env.OPENAI_API_KEY || env.ANTHROPIC_API_KEY);

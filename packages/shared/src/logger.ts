@@ -15,6 +15,7 @@ export const logger = pino({
       '*.accessToken',
       'headers.authorization',
       'SLACK_BOT_TOKEN',
+      'SLACK_USER_TOKEN',
       'GITHUB_TOKEN',
       'OPENAI_API_KEY',
       'ANTHROPIC_API_KEY',
