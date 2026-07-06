@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@cpe/db';
 import { getProductionChecks } from '@cpe/shared';
+import { checkOllamaHealth, isOllamaEnabled } from '@cpe/llm-gateway';
 import { getRedis, redisUrl } from '@/lib/redis';
 
 export const dynamic = 'force-dynamic';
@@ -15,6 +16,7 @@ export async function GET() {
   const checks: Record<string, 'ok' | 'error' | 'skipped'> = {
     database: 'skipped',
     redis: 'skipped',
+    ollama: 'skipped',
   };
 
   try {
@@ -35,11 +37,19 @@ export async function GET() {
     }
   }
 
+  if (isOllamaEnabled()) {
+    const ollama = await checkOllamaHealth();
+    checks.ollama = ollama.ok ? 'ok' : 'error';
+  }
+
   const configChecks =
     process.env.NODE_ENV === 'production' ? getProductionChecks() : [];
   const configOk = configChecks.every((c) => c.ok);
 
-  const infraOk = checks.database === 'ok' && checks.redis === 'ok';
+  const infraOk =
+    checks.database === 'ok' &&
+    checks.redis === 'ok' &&
+    (checks.ollama === 'ok' || checks.ollama === 'skipped');
   const healthy = infraOk && configOk;
 
   return NextResponse.json(

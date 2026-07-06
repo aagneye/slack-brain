@@ -1,5 +1,11 @@
 import type { ContextPack, PackItem } from '@cpe/shared';
 
+export interface PackSendModel {
+  id: string;
+  label: string;
+  primary?: boolean;
+}
+
 /** Block Kit builder for the final Context Pack summary card. */
 
 function confidenceEmoji(score: number): string {
@@ -19,7 +25,11 @@ function topItems(items: PackItem[], n: number): string {
     .join('\n');
 }
 
-export function buildPackCardBlocks(pack: ContextPack, appBaseUrl: string) {
+export function buildPackCardBlocks(
+  pack: ContextPack,
+  appBaseUrl: string,
+  options?: { sendModels?: PackSendModel[] },
+) {
   const blocks: unknown[] = [];
 
   blocks.push({
@@ -71,6 +81,12 @@ export function buildPackCardBlocks(pack: ContextPack, appBaseUrl: string) {
   }
 
   blocks.push({ type: 'divider' });
+
+  const sendModels = options?.sendModels ?? [];
+  const sendButtons = sendModels.map((m) =>
+    action(m.label, `send:${m.id}:${pack.id}`, m.primary ? 'primary' : undefined),
+  );
+
   blocks.push({
     type: 'actions',
     elements: [
@@ -79,9 +95,7 @@ export function buildPackCardBlocks(pack: ContextPack, appBaseUrl: string) {
         text: { type: 'plain_text', text: 'View full Pack' },
         url: `${appBaseUrl}/p/${pack.permalinkSlug}`,
       },
-      action('Send to Claude', `send:claude-3.5-sonnet:${pack.id}`, 'primary'),
-      action('Send to GPT', `send:gpt-4o:${pack.id}`),
-      action('Send to Cursor', `send:cursor:${pack.id}`),
+      ...sendButtons,
       action('Trim items', `trim:${pack.id}`),
     ],
   });

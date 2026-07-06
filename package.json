@@ -18,7 +18,9 @@
     "db:push": "npm run db:push -w @cpe/db",
     "db:migrate": "npm run db:migrate -w @cpe/db",
     "db:migrate:deploy": "npm run db:migrate:deploy -w @cpe/db",
-    "db:generate": "npm run db:generate -w @cpe/db"
+    "db:generate": "npm run db:generate -w @cpe/db",
+    "check:redis": "node scripts/check-redis.mjs",
+    "check:ollama": "node scripts/check-ollama.mjs"
   },
   "devDependencies": {
     "prettier": "^3.3.3",

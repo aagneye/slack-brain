@@ -2,13 +2,18 @@
 
 import { useState } from 'react';
 
-const MODELS = [
-  { id: 'claude-3.5-sonnet', label: 'Send to Claude' },
-  { id: 'gpt-4o', label: 'Send to GPT' },
-  { id: 'cursor', label: 'Send to Cursor' },
-];
+export interface SendModelOption {
+  id: string;
+  label: string;
+}
 
-export function SendToAIBar({ packId }: { packId: string }) {
+export function SendToAIBar({
+  packId,
+  models,
+}: {
+  packId: string;
+  models: SendModelOption[];
+}) {
   const [busy, setBusy] = useState<string | null>(null);
   const [answer, setAnswer] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -37,10 +42,18 @@ export function SendToAIBar({ packId }: { packId: string }) {
     }
   }
 
+  if (models.length === 0) {
+    return (
+      <div className="card text-sm text-neutral-500">
+        No LLM configured. Set OLLAMA_BASE_URL or a cloud API key in your environment.
+      </div>
+    );
+  }
+
   return (
     <div className="card sticky bottom-4">
       <div className="flex flex-wrap gap-2">
-        {MODELS.map((m) => (
+        {models.map((m) => (
           <button
             key={m.id}
             onClick={() => send(m.id)}

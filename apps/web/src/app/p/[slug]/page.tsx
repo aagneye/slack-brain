@@ -3,6 +3,7 @@ import type { ContextPack } from '@cpe/shared';
 import { prisma } from '@cpe/db';
 import { ConfidenceBadge } from '@/components/ConfidenceBadge';
 import { PackSection } from '@/components/PackSection';
+import { getAvailableSendModels } from '@cpe/llm-gateway';
 import { SendToAIBar } from '@/components/SendToAIBar';
 
 export default async function PackPage({ params }: { params: { slug: string } }) {
@@ -10,6 +11,7 @@ export default async function PackPage({ params }: { params: { slug: string } })
   if (!row) notFound();
 
   const pack = row.packJson as unknown as ContextPack;
+  const sendModels = getAvailableSendModels();
 
   return (
     <main className="mx-auto max-w-3xl px-6 py-10">
@@ -57,7 +59,7 @@ export default async function PackPage({ params }: { params: { slug: string } })
         <PackSection title="Deploys" items={pack.sections.deploys} />
         <PackSection title="Incidents" items={pack.sections.incidents} />
 
-        <SendToAIBar packId={pack.id} />
+        <SendToAIBar packId={pack.id} models={sendModels} />
       </div>
     </main>
   );
