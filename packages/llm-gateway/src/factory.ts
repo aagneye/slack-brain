@@ -104,6 +104,24 @@ export function createGatewayProviders(processEnv: NodeJS.ProcessEnv = process.e
   return providers;
 }
 
+/** Quick connectivity check for health endpoints and startup logs. */
+export async function checkOllamaHealth(
+  processEnv: NodeJS.ProcessEnv = process.env,
+): Promise<{ ok: boolean; models?: string[]; detail?: string }> {
+  if (!isOllamaEnabled(processEnv)) {
+    return { ok: false, detail: 'ollama not enabled' };
+  }
+  try {
+    const base = ollamaBaseUrl(processEnv);
+    const res = await fetch(`${base}/api/tags`, { signal: AbortSignal.timeout(8000) });
+    if (!res.ok) return { ok: false, detail: `tags ${res.status}` };
+    const json = (await res.json()) as { models?: Array<{ name: string }> };
+    return { ok: true, models: json.models?.map((m) => m.name) ?? [] };
+  } catch (err) {
+    return { ok: false, detail: (err as Error).message };
+  }
+}
+
 /** Models shown in the portal Send-to-AI bar and Slack Pack card buttons. */
 export function getAvailableSendModels(processEnv: NodeJS.ProcessEnv = process.env): SendModelOption[] {
   const models: SendModelOption[] = [];

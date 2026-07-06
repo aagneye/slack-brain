@@ -10,7 +10,7 @@ export type CreateJobInput = z.infer<typeof createJobSchema>;
 
 /** Request body for sending a Pack to an LLM. */
 export const sendPackSchema = z.object({
-  model: z.enum(['claude-3.5-sonnet', 'claude-3.7-sonnet', 'gpt-4o', 'gpt-4.1', 'cursor']),
+  model: z.enum(['claude-3.5-sonnet', 'claude-3.7-sonnet', 'gpt-4o', 'gpt-4.1', 'cursor', 'ollama']),
   includedItemIds: z.array(z.string()).optional(),
 });
 export type SendPackInput = z.infer<typeof sendPackSchema>;

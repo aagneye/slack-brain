@@ -47,7 +47,8 @@ export type LLMModel =
   | 'claude-3.7-sonnet'
   | 'gpt-4o'
   | 'gpt-4.1'
-  | 'cursor';
+  | 'cursor'
+  | 'ollama';
 
 /** Normalized shape every connector returns. */
 export interface RetrievedItem {

@@ -11,4 +11,9 @@ export {
   createPipelineLLM,
   compressionModel,
   isOllamaEnabled,
+  getAvailableSendModels,
+  checkOllamaHealth,
+  ollamaBaseUrl,
+  ollamaChatModel,
 } from './factory.js';
+export type { SendModelOption } from './factory.js';
