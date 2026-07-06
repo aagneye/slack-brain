@@ -33,3 +33,5 @@ packages/db/prisma/*.db
 
 # Test / coverage
 coverage/
+
+.env
