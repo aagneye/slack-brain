@@ -11,6 +11,7 @@ import { formatPackAsPrompt } from './format.js';
  */
 
 export interface GatewayProviders {
+  ollama?: LLMPort;
   openai?: LLMPort;
   anthropic?: LLMPort;
 }
@@ -24,6 +25,7 @@ export interface SendResult {
 }
 
 function providerForModel(model: string, providers: GatewayProviders): LLMPort | null {
+  if (model === 'ollama' || model.startsWith('ollama:')) return providers.ollama ?? null;
   if (model.startsWith('claude')) return providers.anthropic ?? null;
   if (model.startsWith('gpt')) return providers.openai ?? null;
   return null;

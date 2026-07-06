@@ -57,3 +57,31 @@ export class HashingEmbeddings implements EmbeddingPort {
     });
   }
 }
+
+/** Ollama /api/embed — used for ranking and dedupe when running fully local. */
+export class OllamaEmbeddings implements EmbeddingPort {
+  private readonly baseUrl: string;
+  private readonly model: string;
+
+  constructor(opts: { baseUrl?: string; model?: string } = {}) {
+    this.baseUrl = (opts.baseUrl ?? process.env.OLLAMA_BASE_URL ?? 'http://localhost:11434').replace(
+      /\/$/,
+      '',
+    );
+    this.model = opts.model ?? process.env.OLLAMA_EMBED_MODEL ?? 'nomic-embed-text';
+  }
+
+  async embed(texts: string[]): Promise<number[][]> {
+    if (texts.length === 0) return [];
+    const res = await fetch(`${this.baseUrl}/api/embed`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: this.model, input: texts }),
+    });
+    if (!res.ok) {
+      throw new Error(`ollama embeddings failed: ${res.status} ${res.statusText}`);
+    }
+    const json = (await res.json()) as { embeddings?: number[][] };
+    return json.embeddings ?? [];
+  }
+}
