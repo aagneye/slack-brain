@@ -1,5 +1,6 @@
 import { auth } from '@/auth';
 import { prisma } from '@cpe/db';
+import type { AuditEvent } from '@prisma/client';
 import { AppNav } from '@/components/AppNav';
 
 export default async function AuditPage() {
@@ -8,7 +9,7 @@ export default async function AuditPage() {
   const workspace = slackTeamId
     ? await prisma.workspace.findUnique({ where: { slackTeamId } })
     : null;
-  const events = workspace
+  const events: AuditEvent[] = workspace
     ? await prisma.auditEvent.findMany({
         where: { workspaceId: workspace.id },
         orderBy: { createdAt: 'desc' },

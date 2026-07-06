@@ -1,4 +1,9 @@
 /** @type {import('next').NextConfig} */
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
 const nextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
@@ -36,6 +41,10 @@ const nextConfig = {
     // Map those specifiers to `.ts` files when webpack resolves modules.
     config.resolve.extensionAlias = {
       '.js': ['.ts', '.tsx', '.js'],
+    };
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': path.resolve(__dirname, 'src'),
     };
     return config;
   },
