@@ -1,11 +1,13 @@
 # Render blueprint for the Context Pack Engine worker.
+# Slack Request URLs go to Vercel only — see docs/DEPLOY-SLACK-VERCEL-RENDER.md
 # The Next.js web app deploys to Vercel; the long-running worker lives here.
-# See PRODUCTION.md and setup.md §8 for the full deployment guide.
 services:
   - type: worker
     name: cpe-worker
     runtime: node
     plan: starter
+    region: oregon
+    branch: main
     buildCommand: npm ci && npm run db:generate -w @cpe/db && npm run build -w @cpe/worker
     preDeployCommand: npm run db:migrate:deploy -w @cpe/db
     startCommand: npm run start -w @cpe/worker
@@ -13,6 +15,9 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      - key: APP_BASE_URL
+        sync: false
+        # Set to your Vercel URL, e.g. https://slack-brain.vercel.app
       - key: DATABASE_URL
         sync: false
       - key: DIRECT_URL
@@ -39,7 +44,5 @@ services:
         value: nomic-embed-text
       - key: EMBEDDINGS_PROVIDER
         value: ollama
-      - key: APP_BASE_URL
-        sync: false
       - key: WORKER_CONCURRENCY
         value: '4'

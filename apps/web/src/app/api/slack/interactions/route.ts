@@ -4,6 +4,7 @@ import { prisma, audit } from '@cpe/db';
 import { readVerifiedSlackBody } from '@/lib/slack-verify';
 import { buildGateway } from '@/lib/llm';
 
+export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 /**

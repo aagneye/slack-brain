@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@cpe/db';
-import { getProductionChecks } from '@cpe/shared';
+import { getProductionChecks, getSlackWebhookUrls } from '@cpe/shared';
 import { checkOllamaHealth, isOllamaEnabled } from '@cpe/llm-gateway';
 import { getRedis, redisUrl } from '@/lib/redis';
 
@@ -52,10 +52,14 @@ export async function GET() {
     (checks.ollama === 'ok' || checks.ollama === 'skipped');
   const healthy = infraOk && configOk;
 
+  const appBaseUrl = process.env.APP_BASE_URL ?? process.env.AUTH_URL;
+  const slackUrls = appBaseUrl ? getSlackWebhookUrls(appBaseUrl) : undefined;
+
   return NextResponse.json(
     {
       status: healthy ? 'ok' : 'degraded',
       checks,
+      slack: slackUrls,
       config: process.env.NODE_ENV === 'production' ? configChecks : undefined,
       latencyMs: Date.now() - started,
     },

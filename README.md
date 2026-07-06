@@ -112,7 +112,8 @@ Pack from the dashboard or `/contextpack` in Slack.
 ## Setup & deployment
 
 - **Local dev:** [setup.md](setup.md) — Slack app, Neon/Docker Postgres, Redis, env vars
-- **Production:** [PRODUCTION.md](PRODUCTION.md) — Vercel + Render + Neon + Upstash checklist
+- **Deploy (Vercel + Render + Slack URLs):** [docs/DEPLOY-SLACK-VERCEL-RENDER.md](docs/DEPLOY-SLACK-VERCEL-RENDER.md)
+- **Production checklist:** [PRODUCTION.md](PRODUCTION.md) — Neon + Upstash + troubleshooting
 
 ## Status
 

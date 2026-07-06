@@ -54,6 +54,8 @@ DATABASE_URL="..." DIRECT_URL="..." npm run db:migrate:deploy
 
 ## Step 3 — Web app (Vercel)
 
+> **Full guide:** [docs/DEPLOY-SLACK-VERCEL-RENDER.md](docs/DEPLOY-SLACK-VERCEL-RENDER.md)
+
 1. Import the repo at https://vercel.com/new
 2. **Root Directory:** `apps/web`
 3. Framework: Next.js (auto-detected)
@@ -72,13 +74,14 @@ DATABASE_URL="..." DIRECT_URL="..." npm run db:migrate:deploy
    | `SLACK_CLIENT_ID` | Slack app |
    | `SLACK_CLIENT_SECRET` | Slack app |
    | `SLACK_SIGNING_SECRET` | Slack app |
-   | `SLACK_BOT_TOKEN` | Slack app | Bot token (`xoxb-`) — post Pack cards, not search |
-   | `SLACK_USER_TOKEN` | Slack user OAuth | User token (`xoxp-`) with `search:read` for retrieval |
+   | `SLACK_BOT_TOKEN` | Bot token (`xoxb-`) — post Pack cards, not search |
+   | `SLACK_USER_TOKEN` | User token (`xoxp-`) with `search:read` for retrieval |
    | `GITHUB_TOKEN` | GitHub PAT |
-   | `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` | at least one |
-   | `EMBEDDINGS_PROVIDER` | `openai` |
+   | `OLLAMA_ENABLED` / `OLLAMA_BASE_URL` | Ollama (or cloud keys below) |
+   | `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` | at least one if not using Ollama |
+   | `EMBEDDINGS_PROVIDER` | `ollama` or `openai` |
 
-6. Deploy. Verify: `GET https://your-app.vercel.app/api/health` → `{ "status": "ok" }`
+6. Deploy. Verify: `GET https://your-app.vercel.app/api/health` → `{ "status": "ok", "slack": { ... } }`
 
 ---
 
@@ -97,6 +100,8 @@ DATABASE_URL="..." DIRECT_URL="..." npm run db:migrate:deploy
 
 ## Step 5 — Slack app URLs (production)
 
+All Request URLs point at **Vercel** (not Render). See [docs/DEPLOY-SLACK-VERCEL-RENDER.md](docs/DEPLOY-SLACK-VERCEL-RENDER.md).
+
 Update every Slack app URL to your **Vercel** domain:
 
 | Setting | URL |
@@ -105,6 +110,8 @@ Update every Slack app URL to your **Vercel** domain:
 | Slash command | `https://your-app.vercel.app/api/slack/commands` |
 | Interactivity | `https://your-app.vercel.app/api/slack/interactions` |
 | Event subscriptions | `https://your-app.vercel.app/api/slack/events` |
+
+Or copy from `GET /api/health` → `slack` object after deploy.
 
 Re-install the app to your workspace after changing URLs.
 

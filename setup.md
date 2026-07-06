@@ -332,43 +332,68 @@ Set `APP_BASE_URL` and `AUTH_URL` to your ngrok URL. Re-install the Slack app if
 
 ---
 
-## 8. Deployment
+## 8. Deployment (Vercel + Render + Slack URLs)
 
-> **Full production checklist:** see **[PRODUCTION.md](../PRODUCTION.md)** — Vercel, Render, Neon,
-> Upstash, env vars, Slack URL updates, and smoke tests.
+> **Step-by-step deploy guide:** **[docs/DEPLOY-SLACK-VERCEL-RENDER.md](docs/DEPLOY-SLACK-VERCEL-RENDER.md)**  
+> Full walkthrough: Vercel web, Render worker, and every Slack Request URL.
 
-### 8.1 Web portal → Vercel
+**Architecture:** Slack webhooks hit **Vercel only**. The **Render worker** processes jobs from Redis.
+Neon (DB) and Upstash (Redis) are shared between both.
 
-1. Import the GitHub repo into Vercel.
-2. **Root directory:** `apps/web`. Framework preset: Next.js.
-3. Add all env vars from `.env` (use Neon + Upstash URLs, not local Docker ones).
-4. Set `AUTH_URL` / `APP_BASE_URL` to the Vercel production URL.
-5. Update every Slack Request/Redirect URL to the Vercel domain.
+### 8.1 Slack Request URLs (paste into api.slack.com)
 
-### 8.2 Worker → Render
+After Vercel deploy, replace `YOUR-VERCEL-URL` with your domain (e.g. `slack-brain.vercel.app`):
 
-The worker is a long-running background process (not serverless), so it lives on Render.
+| Slack setting | Request URL |
+|---|---|
+| OAuth redirect | `https://YOUR-VERCEL-URL/api/auth/callback/slack` |
+| Slash command `/contextpack` | `https://YOUR-VERCEL-URL/api/slack/commands` |
+| Interactivity | `https://YOUR-VERCEL-URL/api/slack/interactions` |
+| Event subscriptions | `https://YOUR-VERCEL-URL/api/slack/events` |
 
-1. New → **Background Worker** (or Web Service) from the repo.
-2. **Build:** `npm install && npm run build -w @cpe/worker`
-3. **Start:** `npm run start -w @cpe/worker`
-4. Add the same `DATABASE_URL`, `DIRECT_URL`, `REDIS_URL`, connector keys, and **Ollama** vars
-   (`OLLAMA_ENABLED`, `OLLAMA_BASE_URL`, `OLLAMA_CHAT_MODEL`, `OLLAMA_EMBED_MODEL`,
-   `EMBEDDINGS_PROVIDER=ollama`).
-5. Point it at the **same Neon DB and Upstash Redis** as the web app.
+Verify URLs from your deploy:
 
-A `render.yaml` blueprint is included in the repo root for reference.
+```bash
+curl https://YOUR-VERCEL-URL/api/health
+# → "slack": { "slashCommand": "https://...", ... }
+```
 
-### 8.3 Database → Neon (prod)
+Re-install the Slack app after changing URLs. Use `/contextpack` in a **channel** (not the app DM).
 
-Use a separate Neon project/branch for production; run `npm run db:migrate:deploy` in CI or as a
-Render pre-deploy step.
+### 8.2 Web portal → Vercel
 
-### 8.4 Post-deploy checklist
+1. Import the GitHub repo at [vercel.com/new](https://vercel.com/new).
+2. **Root Directory:** `apps/web`. Framework: Next.js.
+3. Add env vars from [`.env.production.example`](.env.production.example).
+4. Set `APP_BASE_URL` and `AUTH_URL` to `https://YOUR-VERCEL-URL` (no trailing slash).
+5. Deploy → confirm `GET /api/health` returns `"status": "ok"`.
 
-- Re-install the Slack app pointing at production URLs.
-- Verify the Slack URL-verification challenge succeeds on `/api/slack/events`.
-- Smoke test: `/contextpack test` → progress → Pack → **Send to Ollama** (or cloud model).
+`apps/web/vercel.json` configures the monorepo install/build from the repo root.
+
+### 8.3 Worker → Render
+
+The worker is a long-running BullMQ consumer — not suitable for Vercel serverless.
+
+1. **New → Blueprint** on Render (uses [`render.yaml`](render.yaml)) **or** create a Background Worker manually.
+2. Set the same `DATABASE_URL`, `DIRECT_URL`, `REDIS_URL` as Vercel.
+3. Set `APP_BASE_URL` to your **Vercel URL** (Pack links in Slack).
+4. Set Ollama vars if not using cloud LLM keys (`OLLAMA_BASE_URL` must be reachable from Render).
+
+Worker logs: `worker ready, listening on "context" queue`.
+
+### 8.4 Database → Neon (prod)
+
+Use a separate Neon project/branch for production; migrations run on Render pre-deploy (`db:migrate:deploy`).
+
+### 8.5 Post-deploy checklist
+
+- [ ] `GET https://YOUR-VERCEL-URL/api/health` → ok + `slack` URLs
+- [ ] Render worker running with same `REDIS_URL` as Vercel
+- [ ] All four Slack Request URLs updated and app reinstalled
+- [ ] Slack events URL verification succeeds
+- [ ] `/contextpack test` in a channel → Pack card → Send to Ollama
+
+See also **[PRODUCTION.md](PRODUCTION.md)** for troubleshooting.
 
 ---
 

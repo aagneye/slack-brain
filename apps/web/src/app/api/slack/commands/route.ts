@@ -4,6 +4,7 @@ import { resolveWorkspaceUser } from '@/lib/workspace';
 import { enqueueContextJob } from '@/lib/queue';
 import { readVerifiedSlackBody } from '@/lib/slack-verify';
 
+export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 /**
