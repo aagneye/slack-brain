@@ -10,7 +10,7 @@ variables it produces.
 > - [ ] PostgreSQL with `pgvector` (local Docker **or** Neon)
 > - [ ] Redis (local Docker **or** Upstash)
 > - [ ] Slack app created + OAuth + slash command + event subscriptions
-> - [ ] OpenAI and/or Anthropic API keys
+> - [ ] OpenAI/Anthropic API keys **or** Ollama running locally / on a reachable host
 > - [ ] `.env` filled in from `.env.example`
 > - [ ] `npm run db:push` then `npm run dev`
 > - [ ] (Deploy) Web → Vercel, Worker → Render
@@ -220,15 +220,57 @@ GITHUB_TOKEN="github_pat_..."
 
 ---
 
-## 5. LLM providers (the gateway)
+## 5. LLM providers (Ollama or cloud)
 
-At least one is required to use "Send to AI".
+The pipeline uses an LLM for **compression summaries** and the **Send to AI** buttons (web + Slack).
+For production with Neon + Upstash but **no cloud LLM keys**, use **Ollama**.
+
+### Option A — Ollama (recommended for self-hosted AI)
+
+1. Install Ollama: https://ollama.com
+2. Pull models used by the pipeline:
+
+   ```bash
+   ollama pull llama3.2
+   ollama pull nomic-embed-text
+   ```
+
+3. Add to `.env`:
+
+   ```
+   OLLAMA_ENABLED=true
+   OLLAMA_BASE_URL=http://localhost:11434
+   OLLAMA_CHAT_MODEL=llama3.2
+   OLLAMA_EMBED_MODEL=nomic-embed-text
+   EMBEDDINGS_PROVIDER=ollama
+   ```
+
+4. Verify:
+
+   ```bash
+   npm run check:ollama
+   ```
+
+**Production (Vercel web + Render worker):** the worker must reach Ollama over the network.
+`localhost:11434` on Render will **not** work — run Ollama on a VPS, tunnel, or sidecar and set:
+
+```
+OLLAMA_ENABLED=true
+OLLAMA_BASE_URL=https://your-ollama-host:11434
+EMBEDDINGS_PROVIDER=ollama
+```
+
+Leave `OPENAI_API_KEY` and `ANTHROPIC_API_KEY` empty when Ollama is your only provider.
+
+### Option B — Cloud APIs (OpenAI / Anthropic)
 
 ```
 OPENAI_API_KEY="sk-..."           # https://platform.openai.com
 ANTHROPIC_API_KEY="sk-ant-..."    # https://console.anthropic.com
 EMBEDDINGS_PROVIDER="openai"      # used for ranking/dedupe embeddings
 ```
+
+You can combine Ollama with cloud keys; Ollama is preferred when `OLLAMA_ENABLED=true`.
 
 ---
 
@@ -259,6 +301,35 @@ npm run dev                    # runs web (3000) + worker together
 Open http://localhost:3000 → **Sign in with Slack** → **Connectors** → connect GitHub →
 trigger a Context Pack from the dashboard or `/contextpack` in Slack.
 
+### 7.1 Using Slack Brain inside Slack
+
+Once `npm run dev` is running (or production is deployed) and Slack Request URLs point at your app:
+
+1. In any channel where the bot is installed, run:
+
+   ```
+   /contextpack summarize recent deploy issues for payments service
+   ```
+
+2. The bot posts a **progress message**, then a **Context Pack card** when the worker finishes.
+3. On the card:
+   - **View full Pack** — opens the web portal (`/p/<slug>`).
+   - **Ollama (llama3.2)** — sends the Pack to your Ollama model and posts the answer in-thread.
+   - **Open in Cursor** — handoff link for IDE workflows.
+4. Retrieval uses your **user search token** (`SLACK_USER_TOKEN` or Connectors → Slack Search).
+   The bot token only posts messages.
+
+**Local dev checklist for Slack:**
+
+```bash
+ngrok http 3000                    # expose web to Slack
+npm run check:redis                # Upstash or local Redis
+npm run check:ollama               # Ollama reachable
+npm run dev                        # web :3000 + worker
+```
+
+Set `APP_BASE_URL` and `AUTH_URL` to your ngrok URL. Re-install the Slack app if URLs change.
+
 ---
 
 ## 8. Deployment
@@ -281,7 +352,9 @@ The worker is a long-running background process (not serverless), so it lives on
 1. New → **Background Worker** (or Web Service) from the repo.
 2. **Build:** `npm install && npm run build -w @cpe/worker`
 3. **Start:** `npm run start -w @cpe/worker`
-4. Add the same `DATABASE_URL`, `DIRECT_URL`, `REDIS_URL`, connector + LLM keys.
+4. Add the same `DATABASE_URL`, `DIRECT_URL`, `REDIS_URL`, connector keys, and **Ollama** vars
+   (`OLLAMA_ENABLED`, `OLLAMA_BASE_URL`, `OLLAMA_CHAT_MODEL`, `OLLAMA_EMBED_MODEL`,
+   `EMBEDDINGS_PROVIDER=ollama`).
 5. Point it at the **same Neon DB and Upstash Redis** as the web app.
 
 A `render.yaml` blueprint is included in the repo root for reference.
@@ -295,7 +368,7 @@ Render pre-deploy step.
 
 - Re-install the Slack app pointing at production URLs.
 - Verify the Slack URL-verification challenge succeeds on `/api/slack/events`.
-- Smoke test: `/contextpack test` → progress → Pack → Send to AI.
+- Smoke test: `/contextpack test` → progress → Pack → **Send to Ollama** (or cloud model).
 
 ---
 
@@ -312,9 +385,13 @@ Render pre-deploy step.
 | `SLACK_BOT_TOKEN` | yes | §3.7 | Post/update Slack messages (xoxb-) |
 | `SLACK_USER_TOKEN` | for search | §3.7 | Slack message search (xoxp-, search:read) |
 | `GITHUB_TOKEN` | for GitHub | §4 | GitHub retrieval |
-| `OPENAI_API_KEY` | one of | §5 | LLM + embeddings |
-| `ANTHROPIC_API_KEY` | one of | §5 | LLM |
-| `EMBEDDINGS_PROVIDER` | yes | §5 | Which provider for embeddings |
+| `OPENAI_API_KEY` | one of | §5 | Cloud LLM + embeddings |
+| `ANTHROPIC_API_KEY` | one of | §5 | Cloud LLM |
+| `OLLAMA_ENABLED` | Ollama | §5 | `true` in production when using Ollama |
+| `OLLAMA_BASE_URL` | Ollama | §5 | Ollama HTTP API (not localhost on Render) |
+| `OLLAMA_CHAT_MODEL` | Ollama | §5 | Chat model for compression + Send-to-AI |
+| `OLLAMA_EMBED_MODEL` | Ollama | §5 | Embedding model for ranking/dedupe |
+| `EMBEDDINGS_PROVIDER` | yes | §5 | `ollama` or `openai` |
 | `AUTH_SECRET` | yes | §6 | Session encryption |
 | `AUTH_URL` / `APP_BASE_URL` | yes | §3.8/§6 | Public base URL |
 

@@ -29,8 +29,16 @@ services:
         sync: false
       - key: ANTHROPIC_API_KEY
         sync: false
+      - key: OLLAMA_ENABLED
+        value: 'true'
+      - key: OLLAMA_BASE_URL
+        sync: false
+      - key: OLLAMA_CHAT_MODEL
+        value: llama3.2
+      - key: OLLAMA_EMBED_MODEL
+        value: nomic-embed-text
       - key: EMBEDDINGS_PROVIDER
-        value: openai
+        value: ollama
       - key: APP_BASE_URL
         sync: false
       - key: WORKER_CONCURRENCY
