@@ -78,6 +78,9 @@ DIRECT_URL="postgresql://USER:PASSWORD@ep-xxxx.region.aws.neon.tech/cpe?sslmode=
 
 ### Apply the schema
 
+Prisma CLI runs from `packages/db` and loads env from the **repo root** `.env` (not
+`packages/db/.env`). Keep `DATABASE_URL` and `DIRECT_URL` in the root `.env` file.
+
 ```bash
 npm run db:push -w @cpe/db      # dev: push schema
 # or, for migration history:
