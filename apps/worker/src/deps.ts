@@ -1,6 +1,8 @@
-import Redis from 'ioredis';
+import type Redis from 'ioredis';
 import type { ConnectorPort, EmbeddingPort, LLMPort, PipelineDeps } from '@cpe/core';
-import { SlackConnector, GitHubConnector } from '@cpe/connectors';
+import { SlackSearchConnector, GitHubConnector } from '@cpe/connectors';
+import { assertSlackSearchToken, logger } from '@cpe/shared';
+import { resolveSlackSearchToken } from '@cpe/db';
 import {
   OpenAIEmbeddings,
   HashingEmbeddings,
@@ -9,17 +11,39 @@ import {
 } from '@cpe/llm-gateway';
 import { RedisEventBus } from './adapters/event-bus.js';
 import { PrismaStore } from './adapters/store.js';
+import type { ContextJobData } from './types.js';
 
 /**
- * Composition root: builds the connectors, embeddings, LLM, event bus and store
- * from environment configuration and assembles PipelineDeps. Connectors with no
- * configured token are simply omitted (the pipeline degrades gracefully).
+ * Builds pipeline dependencies for a single job. Slack search uses the
+ * **requesting user's** token (xoxp-), never the bot token.
  */
-export function buildPipelineDeps(redis: Redis): PipelineDeps {
+export async function buildPipelineDepsForJob(
+  redis: Redis,
+  job: ContextJobData,
+): Promise<PipelineDeps> {
   const connectors: ConnectorPort[] = [];
-  if (process.env.SLACK_BOT_TOKEN) {
-    connectors.push(new SlackConnector({ token: process.env.SLACK_BOT_TOKEN }));
+
+  const slackSearch = await resolveSlackSearchToken({
+    userId: job.createdBy,
+    workspaceId: job.workspaceId,
+  });
+  if (slackSearch) {
+    try {
+      assertSlackSearchToken(slackSearch.token);
+      connectors.push(new SlackSearchConnector({ userToken: slackSearch.token }));
+    } catch (err) {
+      logger.warn(
+        { jobId: job.jobId, source: slackSearch.source, err },
+        'invalid slack search token — skipping Slack retrieval',
+      );
+    }
+  } else {
+    logger.warn(
+      { jobId: job.jobId },
+      'no slack user search token — connect Slack Search in portal or set SLACK_USER_TOKEN',
+    );
   }
+
   if (process.env.GITHUB_TOKEN) {
     connectors.push(new GitHubConnector({ token: process.env.GITHUB_TOKEN }));
   }
@@ -43,7 +67,12 @@ export function buildPipelineDeps(redis: Redis): PipelineDeps {
   };
 }
 
-/** Fallback LLM used when no provider key is set (compression falls back too). */
+/** @deprecated Use buildPipelineDepsForJob — connectors are resolved per job. */
+export function buildPipelineDeps(redis: Redis): PipelineDeps {
+  void redis;
+  throw new Error('buildPipelineDeps is deprecated; use buildPipelineDepsForJob per job');
+}
+
 class NoopLLM implements LLMPort {
   async complete(): Promise<{ text: string }> {
     return { text: '' };

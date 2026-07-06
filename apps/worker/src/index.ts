@@ -4,7 +4,7 @@ import { runPipeline } from '@cpe/core';
 import { jobs as jobRepo } from '@cpe/db';
 import { getBullMqConnection, getRedisOptions, logger } from '@cpe/shared';
 import type { ContextJobData } from './types.js';
-import { buildPipelineDeps } from './deps.js';
+import { buildPipelineDepsForJob } from './deps.js';
 import { postPackToSlack } from './adapters/slack-notify.js';
 import { validateWorkerProductionEnv } from './env.js';
 
@@ -20,22 +20,21 @@ await validateWorkerProductionEnv();
 const redisUrl = process.env.REDIS_URL ?? 'redis://localhost:6379';
 const connection = new Redis(redisUrl, getRedisOptions(redisUrl, { lazyConnect: false }));
 
-const deps = buildPipelineDeps(connection);
-
 const worker = new Worker<ContextJobData>(
   'context',
   async (job) => {
     const { jobId, workspaceId, task, createdBy, channel } = job.data;
     logger.info({ jobId, task }, 'pipeline start');
+    const jobDeps = await buildPipelineDepsForJob(connection, job.data);
     try {
-      const pack = await runPipeline({ jobId, workspaceId, task, createdBy, deps });
+      const pack = await runPipeline({ jobId, workspaceId, task, createdBy, deps: jobDeps });
       await postPackToSlack(pack, channel);
       logger.info({ jobId, packId: pack.id, confidence: pack.confidence.score }, 'pipeline done');
       return { packId: pack.id };
     } catch (err) {
       logger.error({ jobId, err }, 'pipeline failed');
       await jobRepo.markFailed(jobId, (err as Error).message);
-      await deps.events.publish({
+      await jobDeps.events.publish({
         jobId,
         stage: 'failed',
         detail: { error: (err as Error).message },
