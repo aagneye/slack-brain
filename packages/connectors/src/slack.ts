@@ -1,14 +1,13 @@
 import type { ConnectorPort, SearchQuery } from '@cpe/core';
 import type { RetrievedItem } from '@cpe/shared';
+import { assertSlackSearchToken } from '@cpe/shared';
 import { contentHash, getJson } from './util.js';
 
 /**
- * Slack connector — queries the Slack search API (real-time message search) and
- * normalizes results into RetrievedItem. Requires a user/bot token with
- * `search:read`.
+ * Slack **search** connector — calls `search.messages` with a **user token**
+ * (`xoxp-`) that has `search:read`. Results are scoped to what that user can see.
  *
- * Implements ConnectorPort so the engine treats it identically to every other
- * source (MCP-style uniform contract).
+ * Do NOT pass SLACK_BOT_TOKEN here — Slack rejects bot tokens for search.
  */
 
 interface SlackSearchResponse {
@@ -25,18 +24,20 @@ interface SlackSearchResponse {
   };
 }
 
-export interface SlackConnectorOptions {
-  token: string;
+export interface SlackSearchConnectorOptions {
+  /** User OAuth token (xoxp-) with search:read */
+  userToken: string;
   apiBase?: string;
 }
 
-export class SlackConnector implements ConnectorPort {
+export class SlackSearchConnector implements ConnectorPort {
   readonly kind = 'slack' as const;
-  private readonly token: string;
+  private readonly userToken: string;
   private readonly apiBase: string;
 
-  constructor(opts: SlackConnectorOptions) {
-    this.token = opts.token;
+  constructor(opts: SlackSearchConnectorOptions) {
+    assertSlackSearchToken(opts.userToken);
+    this.userToken = opts.userToken;
     this.apiBase = opts.apiBase ?? 'https://slack.com/api';
   }
 
@@ -44,7 +45,7 @@ export class SlackConnector implements ConnectorPort {
     const q = encodeURIComponent(query.task);
     const url = `${this.apiBase}/search.messages?query=${q}&count=${query.limit}&sort=timestamp`;
     const data = await getJson<SlackSearchResponse>(url, {
-      Authorization: `Bearer ${this.token}`,
+      Authorization: `Bearer ${this.userToken}`,
     });
     if (!data.ok) throw new Error(`slack search failed: ${data.error ?? 'unknown'}`);
 
@@ -63,7 +64,7 @@ export class SlackConnector implements ConnectorPort {
         sourceCreatedAt: new Date(tsMs).toISOString(),
         sourceUpdatedAt: new Date(tsMs).toISOString(),
         contentHash: contentHash([m.text]),
-        metadata: { channel: m.channel },
+        metadata: { channel: m.channel, searchScope: 'user' },
       } satisfies RetrievedItem;
     });
   }
@@ -71,7 +72,7 @@ export class SlackConnector implements ConnectorPort {
   async health(): Promise<{ ok: boolean; detail?: string }> {
     try {
       const data = await getJson<{ ok: boolean; error?: string }>(`${this.apiBase}/auth.test`, {
-        Authorization: `Bearer ${this.token}`,
+        Authorization: `Bearer ${this.userToken}`,
       });
       return { ok: data.ok, detail: data.error };
     } catch (e) {
@@ -79,3 +80,7 @@ export class SlackConnector implements ConnectorPort {
     }
   }
 }
+
+/** @deprecated Use SlackSearchConnector — bot tokens cannot search. */
+export { SlackSearchConnector as SlackConnector };
+export type { SlackSearchConnectorOptions as SlackConnectorOptions };
