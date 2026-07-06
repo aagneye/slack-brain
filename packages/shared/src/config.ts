@@ -23,7 +23,14 @@ const envSchema = z.object({
 
   OPENAI_API_KEY: z.string().optional(),
   ANTHROPIC_API_KEY: z.string().optional(),
-  EMBEDDINGS_PROVIDER: z.enum(['openai']).default('openai'),
+
+  /** Self-hosted Ollama — set OLLAMA_ENABLED=true in production when using local models. */
+  OLLAMA_ENABLED: z.enum(['true', 'false']).optional(),
+  OLLAMA_BASE_URL: z.string().url().optional(),
+  OLLAMA_CHAT_MODEL: z.string().optional(),
+  OLLAMA_EMBED_MODEL: z.string().optional(),
+
+  EMBEDDINGS_PROVIDER: z.enum(['openai', 'ollama']).default('openai'),
 
   RETRIEVAL_TIMEOUT_MS: z.coerce.number().int().positive().default(9000),
   RETRIEVAL_TOP_K_PER_SOURCE: z.coerce.number().int().positive().default(8),

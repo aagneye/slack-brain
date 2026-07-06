@@ -60,11 +60,14 @@ export function getProductionChecks(
     });
   }
 
-  const hasLlm = !!(env.OPENAI_API_KEY || env.ANTHROPIC_API_KEY);
+  const hasOllama = env.OLLAMA_ENABLED === 'true' || !!env.OLLAMA_BASE_URL;
+  const hasLlm = !!(env.OPENAI_API_KEY || env.ANTHROPIC_API_KEY || hasOllama);
   checks.push({
     name: 'LLM_PROVIDER',
     ok: hasLlm,
-    message: hasLlm ? undefined : 'set OPENAI_API_KEY or ANTHROPIC_API_KEY',
+    message: hasLlm
+      ? undefined
+      : 'set OLLAMA_ENABLED=true + OLLAMA_BASE_URL, or OPENAI_API_KEY / ANTHROPIC_API_KEY',
   });
 
   return checks;
