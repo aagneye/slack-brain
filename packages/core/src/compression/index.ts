@@ -12,6 +12,8 @@ import type { LLMPort } from '../ports.js';
 export interface CompressOptions {
   maxCharsPerItem?: number;
   llm?: LLMPort | null;
+  /** Model id passed to llm.complete (e.g. ollama, gpt-4o). */
+  model?: string;
 }
 
 function extractive(item: RetrievedItem, maxChars: number): string {
@@ -34,7 +36,7 @@ export async function compressItems(
     }
     try {
       const { text } = await opts.llm.complete({
-        model: 'gpt-4o',
+        model: opts.model ?? 'gpt-4o',
         system: 'Summarize the content in 1-2 sentences. Preserve specifics (names, IDs, dates). Do not invent.',
         prompt: `${item.title}\n\n${item.body}`,
         maxTokens: 120,

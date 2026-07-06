@@ -64,6 +64,8 @@ export interface PipelineDeps {
   connectors: ConnectorPort[];
   embeddings: EmbeddingPort;
   llm: LLMPort;
+  /** Model id for compression summaries (e.g. ollama, gpt-4o). */
+  compressionModel?: string;
   events: EventBusPort;
   store: StorePort;
 }

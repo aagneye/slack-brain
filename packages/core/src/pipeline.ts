@@ -92,7 +92,10 @@ export async function runPipeline(input: RunPipelineInput): Promise<ContextPack>
 
   // 5. Compress
   await emit('compressing');
-  const summaries = await compressItems(items, { llm: deps.llm });
+  const summaries = await compressItems(items, {
+    llm: deps.llm,
+    model: deps.compressionModel,
+  });
 
   // 6. Score
   await emit('scoring');
