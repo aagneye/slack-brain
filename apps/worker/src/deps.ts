@@ -1,13 +1,13 @@
 import type Redis from 'ioredis';
-import type { ConnectorPort, EmbeddingPort, LLMPort, PipelineDeps } from '@cpe/core';
+import type { ConnectorPort, PipelineDeps } from '@cpe/core';
 import { SlackSearchConnector, GitHubConnector } from '@cpe/connectors';
 import { assertSlackSearchToken, logger } from '@cpe/shared';
 import { resolveSlackSearchToken } from '@cpe/db';
 import {
-  OpenAIEmbeddings,
-  HashingEmbeddings,
-  OpenAIProvider,
-  AnthropicProvider,
+  compressionModel,
+  createEmbeddings,
+  createPipelineLLM,
+  isOllamaEnabled,
 } from '@cpe/llm-gateway';
 import { RedisEventBus } from './adapters/event-bus.js';
 import { PrismaStore } from './adapters/store.js';
@@ -16,6 +16,7 @@ import type { ContextJobData } from './types.js';
 /**
  * Builds pipeline dependencies for a single job. Slack search uses the
  * **requesting user's** token (xoxp-), never the bot token.
+ * LLM + embeddings route through the gateway factory (Ollama when enabled).
  */
 export async function buildPipelineDepsForJob(
   redis: Redis,
@@ -48,20 +49,18 @@ export async function buildPipelineDepsForJob(
     connectors.push(new GitHubConnector({ token: process.env.GITHUB_TOKEN }));
   }
 
-  const embeddings: EmbeddingPort = process.env.OPENAI_API_KEY
-    ? new OpenAIEmbeddings({ apiKey: process.env.OPENAI_API_KEY })
-    : new HashingEmbeddings();
-
-  const llm: LLMPort | null = process.env.OPENAI_API_KEY
-    ? new OpenAIProvider({ apiKey: process.env.OPENAI_API_KEY })
-    : process.env.ANTHROPIC_API_KEY
-      ? new AnthropicProvider({ apiKey: process.env.ANTHROPIC_API_KEY })
-      : null;
+  if (isOllamaEnabled()) {
+    logger.info(
+      { jobId: job.jobId, model: process.env.OLLAMA_CHAT_MODEL ?? 'llama3.2' },
+      'pipeline using Ollama for compression',
+    );
+  }
 
   return {
     connectors,
-    embeddings,
-    llm: llm ?? new NoopLLM(),
+    embeddings: createEmbeddings(),
+    llm: createPipelineLLM(),
+    compressionModel: compressionModel(),
     events: new RedisEventBus(redis),
     store: new PrismaStore(),
   };
@@ -71,10 +70,4 @@ export async function buildPipelineDepsForJob(
 export function buildPipelineDeps(redis: Redis): PipelineDeps {
   void redis;
   throw new Error('buildPipelineDeps is deprecated; use buildPipelineDepsForJob per job');
-}
-
-class NoopLLM implements LLMPort {
-  async complete(): Promise<{ text: string }> {
-    return { text: '' };
-  }
 }

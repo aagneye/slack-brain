@@ -2,6 +2,7 @@ import { Worker } from 'bullmq';
 import Redis from 'ioredis';
 import { runPipeline } from '@cpe/core';
 import { jobs as jobRepo } from '@cpe/db';
+import { checkOllamaHealth, isOllamaEnabled } from '@cpe/llm-gateway';
 import { getBullMqConnection, getRedisOptions, logger } from '@cpe/shared';
 import type { ContextJobData } from './types.js';
 import { buildPipelineDepsForJob } from './deps.js';
@@ -16,6 +17,15 @@ import { validateWorkerProductionEnv } from './env.js';
  * failed and emit a terminal progress event so the UI stops waiting.
  */
 await validateWorkerProductionEnv();
+
+if (isOllamaEnabled()) {
+  const ollama = await checkOllamaHealth();
+  if (ollama.ok) {
+    logger.info({ models: ollama.models?.slice(0, 8) }, 'ollama ready');
+  } else {
+    logger.warn({ detail: ollama.detail }, 'ollama enabled but unreachable — pipeline may fail');
+  }
+}
 
 const redisUrl = process.env.REDIS_URL ?? 'redis://localhost:6379';
 const connection = new Redis(redisUrl, getRedisOptions(redisUrl, { lazyConnect: false }));
