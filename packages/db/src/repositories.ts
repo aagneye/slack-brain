@@ -81,6 +81,26 @@ export const connectors = {
   listForWorkspace(workspaceId: string) {
     return prisma.connector.findMany({ where: { workspaceId } });
   },
+  async upsertSlackSearch(workspaceId: string, tokenRef: string) {
+    const existing = await prisma.connector.findFirst({
+      where: { workspaceId, kind: 'slack_search' },
+    });
+    if (existing) {
+      return prisma.connector.update({
+        where: { id: existing.id },
+        data: { tokenRef, status: 'active', scopes: ['search:read'] },
+      });
+    }
+    return prisma.connector.create({
+      data: {
+        workspaceId,
+        kind: 'slack_search',
+        tokenRef,
+        scopes: ['search:read'],
+        status: 'active',
+      },
+    });
+  },
   upsert(data: {
     workspaceId: string;
     kind: string;

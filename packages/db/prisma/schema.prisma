@@ -32,7 +32,8 @@ model AppUser {
   slackUserId String   @map("slack_user_id")
   email       String?
   displayName String?  @map("display_name")
-  role        String   @default("member") // member | admin
+  role                String   @default("member") // member | admin
+  slackSearchTokenRef String?  @map("slack_search_token_ref") // user xoxp- token ref for search:read
   workspace   Workspace @relation(fields: [workspaceId], references: [id])
   jobs        ContextJob[]
   feedback    Feedback[]
