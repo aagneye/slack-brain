@@ -34,3 +34,5 @@ packages/db/prisma/*.db
 
 # Test / coverage
 coverage/
+
+.cursor/*
