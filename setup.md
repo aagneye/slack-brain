@@ -13,7 +13,9 @@ variables it produces.
 > - [ ] OpenAI/Anthropic API keys **or** Ollama running locally / on a reachable host
 > - [ ] `.env` filled in from `.env.example`
 > - [ ] `npm run db:push` then `npm run dev`
-> - [ ] (Deploy) Web → Vercel, Worker → Render
+> - [ ] (Deploy) Web → **Vercel**, Worker → **Render**, DB → **Neon**, Queue → **Upstash**
+> - [ ] (Deploy) Domain DNS (Google Cloud DNS) → Vercel, Slack URLs → Vercel
+> - [ ] (Deploy) Google OAuth + Slack OAuth for `/signup`
 
 ---
 
@@ -276,7 +278,7 @@ You can combine Ollama with cloud keys; Ollama is preferred when `OLLAMA_ENABLED
 
 ## 6. Auth (web portal sessions)
 
-Auth.js (NextAuth) needs a secret:
+Sign up at `/signup` supports **Google** and **Slack**. Auth.js needs a secret:
 
 ```bash
 # generate one:
@@ -285,8 +287,24 @@ openssl rand -base64 32
 
 ```
 AUTH_SECRET="<generated>"
-AUTH_URL="http://localhost:3000"   # APP_BASE_URL in production
+AUTH_URL="http://localhost:3000"   # same as APP_BASE_URL in production
 ```
+
+### Google OAuth (optional but recommended for judges)
+
+1. [Google Cloud Console](https://console.cloud.google.com/) → APIs & Services → Credentials.
+2. Create **OAuth 2.0 Client ID** → Web application.
+3. Authorized redirect URI:
+   - Local: `http://localhost:3000/api/auth/callback/google`
+   - Prod: `https://creator.tmi.production/api/auth/callback/google`
+4. Copy into `.env`:
+
+```
+GOOGLE_CLIENT_ID="....apps.googleusercontent.com"
+GOOGLE_CLIENT_SECRET="..."
+```
+
+Slack sign-in uses the same Slack app credentials from §3 (`SLACK_CLIENT_ID`, `SLACK_CLIENT_SECRET`).
 
 ---
 
@@ -332,17 +350,66 @@ Set `APP_BASE_URL` and `AUTH_URL` to your ngrok URL. Re-install the Slack app if
 
 ---
 
-## 8. Deployment (Vercel + Render + Slack URLs)
+## 8. Production — where to host what
 
-> **Step-by-step deploy guide:** **[docs/DEPLOY-SLACK-VERCEL-RENDER.md](docs/DEPLOY-SLACK-VERCEL-RENDER.md)**  
-> Full walkthrough: Vercel web, Render worker, and every Slack Request URL.
+This project uses **five services** in production. You do **not** put everything on Vercel.
 
-**Architecture:** Slack webhooks hit **Vercel only**. The **Render worker** processes jobs from Redis.
-Neon (DB) and Upstash (Redis) are shared between both.
+| What | Host | Required? | Why |
+|---|---|---|---|
+| **Website + API** (landing, `/brain`, Slack webhooks) | **Vercel** | Yes | Next.js serverless; Slack Request URLs point here |
+| **Background worker** (Context Pack pipeline) | **Render** | Yes | Long-running BullMQ job consumer — Vercel cannot run this |
+| **PostgreSQL** (users, packs, audit) | **Neon** | Yes | Managed Postgres + `pgvector` |
+| **Redis** (job queue, pub/sub) | **Upstash** | Yes | Shared queue between Vercel and Render |
+| **Ollama** (local AI) | Your VPS / tunnel | If no cloud LLM | Worker calls it over HTTP; not hosted on Vercel/Render |
+| **Custom domain DNS** | Google Cloud DNS (or registrar) | If custom domain | Points `creator.tmi.production` → Vercel |
 
-### 8.1 Slack Request URLs (paste into api.slack.com)
+### Do you need Render?
 
-Production domain: **`https://creator.tmi.production`**
+**Yes**, for a full production demo. Without Render:
+
+- Vercel can receive `/contextpack` and enqueue jobs to Redis
+- **Nothing processes the queue** — jobs stay stuck, no Pack card in Slack
+
+Render runs `apps/worker`, which pulls jobs from Upstash and writes results to Neon.
+
+### What you already have (from your `.env`)
+
+If your `.env` has Neon `DATABASE_URL`, `DIRECT_URL`, and Upstash `REDIS_URL`, you are set for
+database and queue. You still need:
+
+1. **Vercel** — deploy web app + import env vars
+2. **Render** — deploy worker with the **same** env vars
+3. **Slack app** — point all Request URLs to your Vercel domain
+4. **Domain** — add `creator.tmi.production` in Vercel + Google DNS
+5. **Secrets** — `AUTH_SECRET`, `GOOGLE_CLIENT_*`, `SLACK_USER_TOKEN`, AI config
+
+### Production setup order (do in this sequence)
+
+```
+1. Neon     → already have DATABASE_URL + DIRECT_URL
+2. Upstash  → already have REDIS_URL
+3. Vercel   → deploy apps/web, import .env.vercel
+4. Domain   → Vercel Domains + Google DNS records
+5. Render   → deploy worker (render.yaml), same env as Vercel
+6. Slack    → update 4 Request URLs, reinstall app
+7. Google   → OAuth redirect for /signup
+8. Smoke    → /api/health, /signup, /brain, /contextpack in Slack
+```
+
+```bash
+# Generate Vercel import file from your local .env
+npm run env:vercel
+# → upload .env.vercel in Vercel → Settings → Environment Variables → Import .env
+# → copy same values into Render dashboard
+```
+
+---
+## 8.1 Deployment (Vercel + Render + Slack URLs)
+
+> **Full step-by-step:** [docs/DEPLOY-SLACK-VERCEL-RENDER.md](docs/DEPLOY-SLACK-VERCEL-RENDER.md)  
+> **Judge demo runbook:** [docs/HACKATHON-LAUNCH-CHECKLIST.md](docs/HACKATHON-LAUNCH-CHECKLIST.md)
+
+### Slack Request URLs (paste into api.slack.com)
 
 | Slack setting | Request URL |
 |---|---|
@@ -364,6 +431,8 @@ Re-install the Slack app after changing URLs. Use `/contextpack` in a **channel*
 
 ### 8.2 Web portal → Vercel
 
+Production domain: **`https://creator.tmi.production`**
+
 1. Import the GitHub repo at [vercel.com/new](https://vercel.com/new).
 2. **Root Directory:** `apps/web`. Framework: Next.js.
 3. Add env vars from [`.env.production.example`](.env.production.example).
@@ -376,6 +445,22 @@ Re-install the Slack app after changing URLs. Use `/contextpack` in a **channel*
 
 The worker is a long-running BullMQ consumer — not suitable for Vercel serverless.
 
+**Env vars on Render** (same Neon + Upstash as Vercel, plus worker-specific):
+
+| Variable | On Render |
+|---|---|
+| `DATABASE_URL` | Same as Vercel |
+| `DIRECT_URL` | Same as Vercel (migrations on deploy) |
+| `REDIS_URL` | Same as Vercel — **must match** |
+| `APP_BASE_URL` | Your Vercel/domain URL |
+| `SLACK_BOT_TOKEN` | Same as Vercel |
+| `SLACK_USER_TOKEN` | Same as Vercel |
+| `GITHUB_TOKEN` | Same as Vercel |
+| `OLLAMA_*` or cloud LLM keys | Same as Vercel |
+| `WORKER_CONCURRENCY` | Optional (default `4`) |
+
+**Not needed on Render:** `AUTH_SECRET`, `GOOGLE_CLIENT_*`, `SLACK_SIGNING_SECRET` (web-only).
+
 1. **New → Blueprint** on Render (uses [`render.yaml`](render.yaml)) **or** create a Background Worker manually.
 2. Set the same `DATABASE_URL`, `DIRECT_URL`, `REDIS_URL` as Vercel.
 3. Set `APP_BASE_URL` to your **Vercel URL** (Pack links in Slack).
@@ -385,15 +470,32 @@ Worker logs: `worker ready, listening on "context" queue`.
 
 ### 8.4 Database → Neon (prod)
 
-Use a separate Neon project/branch for production; migrations run on Render pre-deploy (`db:migrate:deploy`).
+You already have Neon URLs in `.env`. For production:
 
-### 8.5 Post-deploy checklist
+- Use the **same** Neon project (or a separate prod branch)
+- Run `CREATE EXTENSION IF NOT EXISTS vector;` once in Neon SQL editor
+- `DATABASE_URL` = pooled connection (Vercel + Render runtime)
+- `DIRECT_URL` = direct connection (Render pre-deploy migrations)
 
-- [ ] `GET https://YOUR-VERCEL-URL/api/health` → ok + `slack` URLs
-- [ ] Render worker running with same `REDIS_URL` as Vercel
+Migrations run automatically on Render deploy (`preDeployCommand` in `render.yaml`).
+
+### 8.5 Custom domain (Google Cloud DNS → Vercel)
+
+1. Vercel → Project → **Settings** → **Domains** → add `creator.tmi.production`
+2. Copy DNS records Vercel shows (TXT + A or CNAME)
+3. Google Cloud Console → **Cloud DNS** → your zone → add those records
+4. Wait for verification in Vercel
+5. Update `APP_BASE_URL` and `AUTH_URL` to `https://creator.tmi.production`
+
+### 8.6 Post-deploy checklist
+
+- [ ] `GET https://creator.tmi.production/api/health` → ok + `slack` URLs
+- [ ] Render worker running with **same** `REDIS_URL` as Vercel
 - [ ] All four Slack Request URLs updated and app reinstalled
-- [ ] Slack events URL verification succeeds
-- [ ] `/contextpack test` in a channel → Pack card → Send to Ollama
+- [ ] Google OAuth redirect URI includes production domain
+- [ ] `/signup` works (Google + Slack)
+- [ ] `/brain` loads after sign-in
+- [ ] `/contextpack test` in a Slack channel → Pack card → Send to AI
 
 See also **[PRODUCTION.md](PRODUCTION.md)** for troubleshooting.
 
@@ -421,5 +523,7 @@ See also **[PRODUCTION.md](PRODUCTION.md)** for troubleshooting.
 | `EMBEDDINGS_PROVIDER` | yes | §5 | `ollama` or `openai` |
 | `AUTH_SECRET` | yes | §6 | Session encryption |
 | `AUTH_URL` / `APP_BASE_URL` | yes | §3.8/§6 | Public base URL |
+| `GOOGLE_CLIENT_ID` | for Google sign-in | §6 | OAuth at `/signup` |
+| `GOOGLE_CLIENT_SECRET` | for Google sign-in | §6 | OAuth at `/signup` |
 
 See `.env.example` for the canonical list.
