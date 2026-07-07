@@ -17,11 +17,9 @@
     "@cpe/db": "*",
     "@cpe/llm-gateway": "*",
     "@cpe/shared": "*",
-    "bullmq": "^5.13.0",
-    "ioredis": "^5.4.1"
-  },
-  "devDependencies": {
     "@types/node": "^22.5.5",
+    "bullmq": "^5.13.0",
+    "ioredis": "^5.4.1",
     "typescript": "^5.6.2"
   }
 }
