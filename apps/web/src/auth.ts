@@ -1,17 +1,20 @@
 import NextAuth from 'next-auth';
+import Google from 'next-auth/providers/google';
 import Slack from 'next-auth/providers/slack';
 
 /**
  * Auth.js configuration.
  *
- * "Sign in with Slack" (OpenID Connect) authenticates the user AND establishes
- * which Slack workspace/team they belong to — so logging in is also the first
- * step of connecting Slack. The team id is persisted on the session so the rest
- * of the app can scope every query to that workspace.
+ * Sign in with Google or Slack. Slack OIDC also links the workspace team id
+ * so every query can be scoped to that workspace.
  */
 export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
   providers: [
+    Google({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    }),
     Slack({
       clientId: process.env.SLACK_CLIENT_ID,
       clientSecret: process.env.SLACK_CLIENT_SECRET,
@@ -35,6 +38,6 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     },
   },
   pages: {
-    signIn: '/login',
+    signIn: '/signup',
   },
 });
