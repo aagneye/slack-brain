@@ -15,7 +15,7 @@ const SOURCE = path.join(ROOT, '.env');
 const OUTPUT = path.join(ROOT, '.env.vercel');
 
 /** Production hostname — custom domain on Vercel. */
-const PRODUCTION_HOST = process.env.VERCEL_PRODUCTION_HOST ?? 'creator.tmi.production';
+const PRODUCTION_HOST = process.env.VERCEL_PRODUCTION_HOST ?? 'slackbrain.vercel.app';
 const PRODUCTION_BASE = `https://${PRODUCTION_HOST}`;
 
 function parseEnvFile(content) {
