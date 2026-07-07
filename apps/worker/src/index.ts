@@ -1,4 +1,4 @@
-import { Worker } from 'bullmq';
+import { Worker, type Job } from 'bullmq';
 import Redis from 'ioredis';
 import { runPipeline } from '@cpe/core';
 import { jobs as jobRepo } from '@cpe/db';
@@ -32,7 +32,7 @@ const connection = new Redis(redisUrl, getRedisOptions(redisUrl, { lazyConnect: 
 
 const worker = new Worker<ContextJobData>(
   'context',
-  async (job) => {
+  async (job: Job<ContextJobData>) => {
     const { jobId, workspaceId, task, createdBy, channel } = job.data;
     logger.info({ jobId, task }, 'pipeline start');
     const jobDeps = await buildPipelineDepsForJob(connection, job.data);
