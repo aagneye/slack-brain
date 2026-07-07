@@ -17,6 +17,15 @@ export async function validateWorkerProductionEnv(): Promise<void> {
   const config = loadConfig();
   assertProductionReady(process.env, config, { role: 'worker' });
 
+  if (!process.env.GITHUB_TOKEN) {
+    logger.warn('GITHUB_TOKEN not set — GitHub connector disabled');
+  }
+  if (!process.env.SLACK_USER_TOKEN) {
+    logger.warn(
+      'SLACK_USER_TOKEN not set — Slack search uses per-user tokens from portal when available',
+    );
+  }
+
   await prisma.$queryRaw`SELECT 1`;
 
   const redisUrl = process.env.REDIS_URL ?? config.REDIS_URL;
