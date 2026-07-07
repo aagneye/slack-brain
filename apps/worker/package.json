@@ -6,7 +6,8 @@
   "main": "dist/index.js",
   "scripts": {
     "dev": "node --watch --experimental-strip-types src/index.ts",
-    "build": "tsc -p tsconfig.json",
+    "build": "node esbuild.config.mjs",
+    "build:tsc": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "lint": "echo \"(lint) @cpe/worker\""
@@ -19,6 +20,7 @@
     "@cpe/shared": "*",
     "@types/node": "^22.5.5",
     "bullmq": "^5.13.0",
+    "esbuild": "^0.24.2",
     "ioredis": "^5.4.1",
     "typescript": "^5.6.2"
   }
