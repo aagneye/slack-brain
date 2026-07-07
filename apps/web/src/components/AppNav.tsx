@@ -2,7 +2,8 @@ import Link from 'next/link';
 import { signOut } from '@/auth';
 
 const links = [
-  { href: '/dashboard', label: 'Dashboard' },
+  { href: '/brain', label: 'Brain' },
+  { href: '/dashboard', label: 'Packs' },
   { href: '/connectors', label: 'Connectors' },
   { href: '/history', label: 'History' },
   { href: '/audit', label: 'Audit' },
@@ -10,22 +11,25 @@ const links = [
 
 export function AppNav({ user }: { user?: { name?: string | null } }) {
   return (
-    <header className="border-b border-neutral-200 dark:border-neutral-800">
+    <header className="border-b border-slate-200 bg-white">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-3">
         <div className="flex items-center gap-6">
-          <Link href="/dashboard" className="font-semibold">
-            Context Pack Engine
+          <Link href="/brain" className="flex items-center gap-2 font-semibold text-slate-900">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-xs text-white">
+              🧠
+            </span>
+            Slack Brain
           </Link>
-          <nav className="hidden gap-4 text-sm text-neutral-600 sm:flex dark:text-neutral-400">
+          <nav className="hidden gap-4 text-sm text-slate-600 sm:flex">
             {links.map((l) => (
-              <Link key={l.href} href={l.href} className="hover:text-brand">
+              <Link key={l.href} href={l.href} className="hover:text-indigo-600">
                 {l.label}
               </Link>
             ))}
           </nav>
         </div>
         <div className="flex items-center gap-3 text-sm">
-          <span className="text-neutral-500">{user?.name}</span>
+          <span className="text-slate-500">{user?.name}</span>
           <form
             action={async () => {
               'use server';
