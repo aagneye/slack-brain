@@ -50,13 +50,18 @@ export function getProductionChecks(
   }
 
   if (role === 'worker') {
-    require('GITHUB_TOKEN', env.GITHUB_TOKEN);
+    // Optional connectors — worker starts without them; pipeline skips missing sources.
+    checks.push({
+      name: 'GITHUB_TOKEN',
+      ok: true,
+      message: env.GITHUB_TOKEN ? undefined : 'optional — GitHub retrieval disabled',
+    });
     checks.push({
       name: 'SLACK_USER_TOKEN',
-      ok: !!env.SLACK_USER_TOKEN,
+      ok: true,
       message: env.SLACK_USER_TOKEN
         ? undefined
-        : 'workspace fallback for search; per-user tokens can be set in the portal',
+        : 'optional — set xoxp- token for Slack search fallback',
     });
   }
 
