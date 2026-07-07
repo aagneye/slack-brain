@@ -26,6 +26,13 @@ export async function validateWorkerProductionEnv(): Promise<void> {
     );
   }
 
+  const dbUrl = process.env.DATABASE_URL ?? '';
+  if (dbUrl.includes('neon.tech') && !dbUrl.includes('pgbouncer=true')) {
+    logger.warn(
+      'DATABASE_URL missing pgbouncer=true — add it to Neon pooled URL to avoid idle disconnects',
+    );
+  }
+
   await prisma.$queryRaw`SELECT 1`;
 
   const redisUrl = process.env.REDIS_URL ?? config.REDIS_URL;
