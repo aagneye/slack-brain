@@ -23,6 +23,7 @@
     "check:ollama": "node scripts/check-ollama.mjs",
     "env:vercel": "node scripts/export-vercel-env.mjs",
     "env:render": "node scripts/export-render-env.mjs",
+    "smoke:prod": "node scripts/smoke-check.mjs",
     "build:render": "npm run db:generate -w @cpe/db && npm run build -w @cpe/worker"
   },
   "devDependencies": {
