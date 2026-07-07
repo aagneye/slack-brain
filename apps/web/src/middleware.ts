@@ -8,6 +8,7 @@ export default auth((req) => {
   const isAuthed = !!req.auth;
   const { pathname } = req.nextUrl;
   const isProtected =
+    pathname.startsWith('/brain') ||
     pathname.startsWith('/dashboard') ||
     pathname.startsWith('/connectors') ||
     pathname.startsWith('/history') ||
@@ -15,7 +16,7 @@ export default auth((req) => {
     pathname.startsWith('/audit');
 
   if (isProtected && !isAuthed) {
-    const url = new URL('/login', req.nextUrl.origin);
+    const url = new URL('/signup', req.nextUrl.origin);
     return Response.redirect(url);
   }
   return undefined;
@@ -23,6 +24,7 @@ export default auth((req) => {
 
 export const config = {
   matcher: [
+    '/brain/:path*',
     '/dashboard/:path*',
     '/connectors/:path*',
     '/history/:path*',
