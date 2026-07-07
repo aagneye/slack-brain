@@ -1,13 +1,14 @@
 import { Worker, type Job } from 'bullmq';
 import Redis from 'ioredis';
 import { runPipeline } from '@cpe/core';
-import { jobs as jobRepo } from '@cpe/db';
+import { jobs as jobRepo, prisma } from '@cpe/db';
 import { checkOllamaHealth, isOllamaEnabled } from '@cpe/llm-gateway';
 import { getBullMqConnection, getRedisOptions, logger } from '@cpe/shared';
 import type { ContextJobData } from './types.js';
 import { buildPipelineDepsForJob } from './deps.js';
 import { postPackToSlack } from './adapters/slack-notify.js';
 import { validateWorkerProductionEnv } from './env.js';
+import { startHealthServer } from './health-server.js';
 
 /**
  * Worker entrypoint.
@@ -29,6 +30,20 @@ if (isOllamaEnabled()) {
 
 const redisUrl = process.env.REDIS_URL ?? 'redis://localhost:6379';
 const connection = new Redis(redisUrl, getRedisOptions(redisUrl, { lazyConnect: false }));
+const healthServer = startHealthServer();
+
+/** Neon pooler closes idle connections; keep the Prisma pool warm in production. */
+let keepaliveTimer: ReturnType<typeof setInterval> | undefined;
+if (process.env.NODE_ENV === 'production') {
+  keepaliveTimer = setInterval(async () => {
+    try {
+      await prisma.$queryRaw`SELECT 1`;
+    } catch (err) {
+      logger.warn({ err }, 'database keepalive failed — will reconnect on next query');
+    }
+  }, 4 * 60 * 1000);
+  keepaliveTimer.unref();
+}
 
 const worker = new Worker<ContextJobData>(
   'context',
@@ -61,8 +76,11 @@ worker.on('failed', (job, err) => logger.warn({ jobId: job?.id, err: err.message
 
 async function shutdown() {
   logger.info('shutting down worker');
+  if (keepaliveTimer) clearInterval(keepaliveTimer);
   await worker.close();
   connection.disconnect();
+  healthServer?.close();
+  await prisma.$disconnect();
   process.exit(0);
 }
 process.on('SIGINT', shutdown);
