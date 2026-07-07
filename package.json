@@ -25,6 +25,7 @@
     "env:render": "node scripts/export-render-env.mjs"
   },
   "devDependencies": {
+    "@types/node": "^22.5.5",
     "prettier": "^3.3.3",
     "turbo": "^2.1.0",
     "typescript": "^5.6.2"
