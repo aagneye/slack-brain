@@ -4,7 +4,7 @@ import { SignOutButton } from '@/components/auth/SignOutButton';
 const links = [
   { href: '/brain', label: 'Brain' },
   { href: '/dashboard', label: 'Packs' },
-  { href: '/connectors', label: 'Connectors' },
+  { href: '/brain/connectors', label: 'Connections' },
   { href: '/history', label: 'History' },
   { href: '/audit', label: 'Audit' },
 ];
