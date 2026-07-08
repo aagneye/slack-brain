@@ -22,7 +22,7 @@ export default function BrainstormPage() {
           <li>• Summarize open PRs related to authentication</li>
           <li>• What do we know about the Redis outage in #incidents?</li>
         </ul>
-        <Link href="/connectors" className="btn-ghost mt-4 text-sm">
+        <Link href="/brain/connectors" className="btn-ghost mt-4 text-sm">
           Connect more sources →
         </Link>
       </div>
