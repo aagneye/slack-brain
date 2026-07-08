@@ -43,7 +43,9 @@ point.
 
 This is the intended hackathon demo path:
 
-1. **Your company admin** installs the Slack Brain app into your Slack workspace (once per company).
+1. **Your company admin** installs Slack Brain into your Slack workspace (once per company).  
+   **[→ Click here: Add Slack Brain to your workspace](docs/ADD-SLACK-TO-YOUR-WORKSPACE.md)**  
+   *(Live install button: [slackbrain.vercel.app/add-to-slack](https://slackbrain.vercel.app/add-to-slack))*
 2. **Any teammate** opens a channel and runs:
 
    ```
@@ -98,8 +100,9 @@ clicking around the Brain UI). It does **not** replace Slack for the main workfl
 | **Slack** (recommended for web) | Links your browser session to your **Slack workspace** (`slackTeamId`). Needed for connectors, workspace-scoped settings, and matching the same identity you use in `/contextpack`. |
 | **Google** (optional) | Opens the Brain UI (`/brain`) without going through Slack OAuth. Fine for a UI demo; does **not** auto-link your company’s Slack data unless you also use Slack sign-in. |
 
-**For a real team using Slack Brain:** install the Slack app → use `/contextpack` in channels. Team
-members who want to connect sources or browse history should **Sign in with Slack** on the website.
+**For a real team using Slack Brain:**  
+**[Install Slack Brain in your workspace (admin guide)](docs/ADD-SLACK-TO-YOUR-WORKSPACE.md)** → use `/contextpack` in channels.  
+Team members who want to connect sources or browse history should **Sign in with Slack** on the website.
 
 ### End-to-end diagram
 
@@ -142,8 +145,7 @@ Sign in with Slack on web → Connectors → paste Slack user token (`search:rea
 `/contextpack` now searches messages you can see.
 
 **Admin / demo**  
-Install Slack app to workspace → invite bot to `#engineering` → run a demo prompt → share Pack link
-with judges.
+**[Add Slack Brain to your Slack workspace](docs/ADD-SLACK-TO-YOUR-WORKSPACE.md)** → invite bot to `#engineering` → run a demo prompt → share Pack link with judges.
 
 ---
 
@@ -232,6 +234,7 @@ GitHub → trigger a Pack from the dashboard or Slack.
 
 ## Setup & deployment
 
+- **Workspace admins — install in Slack:** [docs/ADD-SLACK-TO-YOUR-WORKSPACE.md](docs/ADD-SLACK-TO-YOUR-WORKSPACE.md) · [Add to Slack](https://slackbrain.vercel.app/add-to-slack)
 - **How users use it (Slack vs web):** this README § [How users actually use Slack Brain](#how-users-actually-use-slack-brain)
 - **Local dev + production deploy:** [setup.md](setup.md) — Slack app, Neon, Redis, env vars
 - **Deploy (Vercel + Render + Slack URLs):** [docs/DEPLOY-SLACK-VERCEL-RENDER.md](docs/DEPLOY-SLACK-VERCEL-RENDER.md)
