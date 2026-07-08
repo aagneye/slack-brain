@@ -1,7 +1,19 @@
 const team = [
-  { name: 'Aagney', role: 'Lead · Full stack', initial: 'A', color: 'bg-indigo-600' },
-  { name: 'Team Member', role: 'Slack agent & pipeline', initial: 'S', color: 'bg-violet-600' },
-  { name: 'Team Member', role: 'Connectors & LLM gateway', initial: 'C', color: 'bg-sky-600' },
+  { id: 'lead', name: 'Aagney', role: 'Lead · Full stack', initial: 'A', color: 'bg-indigo-600' },
+  {
+    id: 'slack-agent',
+    name: 'Slack agent',
+    role: 'Slash command & pipeline',
+    initial: 'S',
+    color: 'bg-violet-600',
+  },
+  {
+    id: 'connectors',
+    name: 'Connectors',
+    role: 'GitHub, search & LLM gateway',
+    initial: 'C',
+    color: 'bg-sky-600',
+  },
 ];
 
 export function LandingTeam() {
@@ -14,7 +26,7 @@ export function LandingTeam() {
         </p>
         <div className="mt-12 grid gap-6 sm:grid-cols-3">
           {team.map((m) => (
-            <div key={m.name} className="card text-left shadow-soft">
+            <div key={m.id} className="card text-left shadow-soft">
               <div
                 className={`flex h-14 w-14 items-center justify-center rounded-2xl text-xl font-bold text-white ${m.color}`}
               >
