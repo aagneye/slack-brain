@@ -35,6 +35,32 @@ Expect `"status": "ok"`.
 
 ---
 
+## Step 0 — Fix OAuth redirect URI (required once)
+
+If Slack shows **“redirect_uri did not match any configured URIs”**, your Slack app is missing this
+exact Redirect URL. Add it before trying Sign in with Slack again.
+
+1. Open [api.slack.com/apps](https://api.slack.com/apps) → your **Slack Brain** app
+2. **OAuth & Permissions** → **Redirect URLs** → **Add New Redirect URL**
+3. Paste **exactly** (no trailing slash):
+
+   ```
+   https://slackbrain.vercel.app/api/auth/callback/slack
+   ```
+
+4. Also add local for development:
+
+   ```
+   http://localhost:3000/api/auth/callback/slack
+   ```
+
+5. Click **Save URLs**
+6. Try again: [Sign in with Slack](https://slackbrain.vercel.app/add-to-slack)
+
+> The path must be `/api/auth/callback/slack` (Auth.js). Do **not** use a different path.
+
+---
+
 ## Step 1 — Install Slack Brain to your workspace
 
 ### Option A — Add to Slack button (recommended)
