@@ -16,7 +16,8 @@ variables it produces.
 > - [ ] (Deploy) Web → **Vercel**, Worker → **Render**, DB → **Neon**, Queue → **Upstash**
 > - [ ] (Deploy) Slack Request URLs → **Vercel only** (`https://slackbrain.vercel.app`)
 > - [ ] (Deploy) Render worker live → `https://slack-brain.onrender.com/health`
-> - [ ] (Demo) `/slackbrain` in a Slack channel → Pack card → Send to AI
+> - [ ] (Deploy) Ollama for demo: §5.A.2 — ngrok tunnel + `OLLAMA_*` on Vercel **and** Render
+> - [ ] (Demo) `/slackbrain` in a Slack channel → Pack card → Send to AI (Ollama: §5.A.2)
 
 **Live production (hackathon demo):**
 
@@ -241,9 +242,22 @@ GITHUB_TOKEN="github_pat_..."
 The pipeline uses an LLM for **compression summaries** and the **Send to AI** buttons (web + Slack).
 For production with Neon + Upstash but **no cloud LLM keys**, use **Ollama**.
 
-### Option A — Ollama (recommended for self-hosted AI)
+**Where LLM calls run:**
 
-1. Install Ollama: https://ollama.com
+| Step | Host | Uses `OLLAMA_*`? |
+|---|---|---|
+| `/slackbrain` in Slack | Vercel | No (only enqueues) |
+| Build Context Pack (retrieve, dedupe, summarize) | **Render worker** | **Yes** |
+| **Send to AI** button | Vercel | **Yes** |
+
+Set the same `OLLAMA_*` variables on **both Vercel and Render**. `localhost:11434` only works on your
+machine — cloud hosts cannot reach it without a tunnel.
+
+### Option A — Ollama (recommended for self-hosted / no OpenAI credits)
+
+#### A.1 Local development
+
+1. Install Ollama: https://ollama.com (Windows installer is fine).
 2. Pull models used by the pipeline:
 
    ```bash
@@ -251,7 +265,16 @@ For production with Neon + Upstash but **no cloud LLM keys**, use **Ollama**.
    ollama pull nomic-embed-text
    ```
 
-3. Add to `.env`:
+3. Ollama runs as a background service on Windows after install. You do **not** need `ollama serve`
+   unless you stopped the app. If you see:
+
+   ```
+   Error: listen tcp 127.0.0.1:11434: bind: Only one usage of each socket address...
+   ```
+
+   that means Ollama is **already running** — skip `ollama serve`.
+
+4. Add to `.env`:
 
    ```
    OLLAMA_ENABLED=true
@@ -261,22 +284,129 @@ For production with Neon + Upstash but **no cloud LLM keys**, use **Ollama**.
    EMBEDDINGS_PROVIDER=ollama
    ```
 
-4. Verify:
+5. Leave `OPENAI_API_KEY` and `ANTHROPIC_API_KEY` empty when Ollama is your only provider.
+
+6. Verify:
 
    ```bash
    npm run check:ollama
+   curl http://127.0.0.1:11434/api/tags
    ```
 
-**Production (Vercel web + Render worker):** the worker must reach Ollama over the network.
-`localhost:11434` on Render will **not** work — run Ollama on a VPS, tunnel, or sidecar and set:
+#### A.2 Production demo — local Ollama + ngrok (no OpenAI credits)
+
+Use this when **Vercel + Render are deployed** but you want **free local models** for the hackathon
+demo. Your PC must stay on with Ollama and ngrok running during the demo.
+
+**Prerequisites**
+
+| Tool | Purpose |
+|---|---|
+| Ollama (running) | `llama3.2` + `nomic-embed-text` pulled |
+| ngrok | Exposes `localhost:11434` to the internet |
+
+**Step 1 — Confirm Ollama**
+
+```powershell
+curl http://127.0.0.1:11434/api/tags
+```
+
+You should see `llama3.2` and `nomic-embed-text` in the JSON. Do **not** run `ollama serve` if port
+11434 is already in use.
+
+**Step 2 — Install ngrok (Windows)**
+
+1. Download from https://ngrok.com/download (Windows AMD64).
+2. Unzip `ngrok.exe` (e.g. `C:\Tools\ngrok\`).
+3. Sign up at ngrok.com → copy your authtoken.
+4. Configure:
+
+   ```powershell
+   cd C:\Tools\ngrok
+   .\ngrok config add-authtoken YOUR_TOKEN_HERE
+   ```
+
+   Or install via winget: `winget install ngrok.ngrok`
+
+**Step 3 — Start the tunnel**
+
+Open a **separate terminal** and leave it open for the whole demo:
+
+```powershell
+ngrok http 11434
+```
+
+Copy the **HTTPS** forwarding URL, e.g. `https://abc123.ngrok-free.app` (no trailing slash).
+
+Test from any machine:
+
+```powershell
+curl https://abc123.ngrok-free.app/api/tags
+```
+
+**Step 4 — Set env on Vercel AND Render**
+
+Add or update **Production** environment variables on **both** hosts:
+
+```
+OLLAMA_ENABLED=true
+OLLAMA_BASE_URL=https://abc123.ngrok-free.app
+OLLAMA_CHAT_MODEL=llama3.2
+OLLAMA_EMBED_MODEL=nomic-embed-text
+EMBEDDINGS_PROVIDER=ollama
+```
+
+- **Delete or leave empty:** `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`
+- Redeploy **Vercel** (web) and **Render** (worker) after saving.
+
+> ngrok free URLs change every time you restart ngrok. Update `OLLAMA_BASE_URL` and redeploy when
+> the URL changes.
+
+**Step 5 — Verify production**
+
+```bash
+curl https://slackbrain.vercel.app/api/health
+```
+
+Expect `"ollama": "ok"` (not `"error"`). `"status"` may be `"degraded"` only if something else fails;
+what matters for AI is `checks.ollama === "ok"`.
+
+**Step 6 — Demo in Slack**
+
+```
+/slackbrain what should we know before our next deploy?
+```
+
+Watch for progress updates and a Pack card. **Send to AI** uses the same Ollama tunnel.
+
+**During the demo, keep running:**
+
+1. Ollama (Windows background service)
+2. `ngrok http 11434` terminal
+
+**Common issues**
+
+| Symptom | Fix |
+|---|---|
+| `ollama serve` → port already in use | Ollama is already running — use `curl http://127.0.0.1:11434/api/tags` |
+| `ngrok` not recognized | Install ngrok (§A.2 Step 2); use full path `.\ngrok.exe` |
+| `/api/health` → `"ollama": "error"` | Wrong `OLLAMA_BASE_URL`, ngrok stopped, or forgot to redeploy Render |
+| Pack builds but Send to AI fails | Set `OLLAMA_*` on **Vercel** too (not only Render) |
+| Job ack but no Pack card | Check Render logs + `curl https://slack-brain.onrender.com/health` |
+
+#### A.3 Production — Ollama on a VPS (no ngrok)
+
+For a stable URL (no tunnel on your laptop), run Ollama on a VPS or always-on host:
 
 ```
 OLLAMA_ENABLED=true
 OLLAMA_BASE_URL=https://your-ollama-host:11434
+OLLAMA_CHAT_MODEL=llama3.2
+OLLAMA_EMBED_MODEL=nomic-embed-text
 EMBEDDINGS_PROVIDER=ollama
 ```
 
-Leave `OPENAI_API_KEY` and `ANTHROPIC_API_KEY` empty when Ollama is your only provider.
+Same variables on Vercel + Render. Leave cloud API keys empty.
 
 ### Option B — Cloud APIs (OpenAI / Anthropic)
 
@@ -600,7 +730,7 @@ Expected: bot posts progress, then a Context Pack card with View Pack + Send to 
 | Shared queue | Same `REDIS_URL` on both hosts | Copy exact Upstash URL to Vercel + Render |
 | Slack slash command | Run `/slackbrain test` in a channel | Update Request URL to Vercel; reinstall app |
 | Bot in channel | Invite `@Context Pack Engine` (or your app name) | `/invite @YourApp` in the channel |
-| AI (Send to AI button) | Ollama reachable from Render **or** cloud API key | Set remote `OLLAMA_BASE_URL`; not `localhost` |
+| AI (Send to AI button) | `curl …/api/health` → `"ollama":"ok"` | §5.A.2 — ngrok + `OLLAMA_*` on Vercel and Render |
 
 ### 10.3 Configure Slack app (api.slack.com)
 
@@ -668,7 +798,7 @@ Requires `AUTH_SECRET` on Vercel. Google OAuth needs redirect URI:
 | Command ack but no Pack card | Worker not running or `REDIS_URL` mismatch → check Render logs |
 | `dispatch_failed` in Slack | `SLACK_SIGNING_SECRET` wrong on Vercel |
 | Pack card but empty retrieval | Add `SLACK_USER_TOKEN` or connect Slack Search in portal |
-| Send to AI fails | `OLLAMA_BASE_URL` must be reachable from Render (use VPS/tunnel, not localhost) |
+| Send to AI fails | See §5.A.2 — `OLLAMA_BASE_URL` must be ngrok/VPS URL on **Vercel + Render**; keep ngrok running |
 | `DATABASE_URL missing pgbouncer=true` | Add `&pgbouncer=true` to Neon pooled URL on Render |
 | Slack OAuth: `redirect_uri did not match` | Add `https://slackbrain.vercel.app/api/auth/callback/slack` (and local `http://localhost:3000/api/auth/callback/slack`) under **OAuth & Permissions → Redirect URLs**, then **Save URLs** |
 
