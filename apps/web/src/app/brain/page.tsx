@@ -118,7 +118,7 @@ export default async function BrainCoverPage() {
           </div>
         </div>
         <div className="mt-5 flex flex-wrap gap-3">
-          <Link href="/connectors" className="btn-accent rounded-2xl">Open connectors</Link>
+          <Link href="/brain/connectors" className="btn-accent rounded-2xl">Manage connections</Link>
           <Link href="/add-to-slack" className="btn-ghost rounded-2xl">Add Slack Brain to workspace</Link>
         </div>
       </section>
