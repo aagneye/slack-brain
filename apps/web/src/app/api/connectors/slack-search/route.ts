@@ -51,3 +51,30 @@ export async function POST(req: Request) {
 
   return NextResponse.json({ ok: true, kind: 'slack_search', scope: 'user' });
 }
+
+/** DELETE /api/connectors/slack-search — remove the user's Slack search token. */
+export async function DELETE() {
+  const session = await auth();
+  const slackTeamId = (session as { slackTeamId?: string } | null)?.slackTeamId;
+  if (!session?.user || !slackTeamId) {
+    return NextResponse.json({ error: 'unauthorized' }, { status: 401 });
+  }
+
+  const { workspace, user } = await resolveWorkspaceUser({
+    slackTeamId,
+    slackUserId: session.user.email ?? session.user.name ?? 'web-user',
+    name: session.user.name,
+    email: session.user.email,
+  });
+
+  await users.clearSlackSearchToken(user.id);
+
+  await audit.record({
+    workspaceId: workspace.id,
+    actor: user.id,
+    eventType: 'connector.slack_search.disconnected',
+    payload: { userId: user.id },
+  });
+
+  return NextResponse.json({ ok: true, kind: 'slack_search', scope: 'user' });
+}
