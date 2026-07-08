@@ -202,6 +202,7 @@ Full design lives in [`docs/`](docs/):
 
 | Doc | Contents |
 |---|---|
+| [ADD-SLACK-TO-YOUR-WORKSPACE](docs/ADD-SLACK-TO-YOUR-WORKSPACE.md) | **Workspace admins:** install Slack Brain in your company Slack |
 | [01-PRD](docs/01-PRD.md) | Product requirements, user stories, functional & non-functional requirements |
 | [02-architecture](docs/02-architecture.md) | Database, system/backend/frontend architecture, API design |
 | [03-slack-security-structure](docs/03-slack-security-structure.md) | Slack agent flow, security, folder structure |

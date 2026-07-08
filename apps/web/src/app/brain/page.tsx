@@ -44,7 +44,7 @@ export default async function BrainCoverPage() {
         <h1 className="mt-2 text-3xl font-bold">Welcome back, {user.name}</h1>
         <p className="mt-3 max-w-xl text-indigo-100">
           Your verified context layer is ready. Brainstorm a task, review knowledge sources, or
-          trigger <code className="rounded bg-white/10 px-1.5 py-0.5">/contextpack</code> in Slack.
+          trigger <code className="rounded bg-white/10 px-1.5 py-0.5">/slackbrain</code> in Slack.
         </p>
         <Link href="/brain/brainstorm" className="btn mt-6 bg-white text-indigo-700 hover:bg-indigo-50">
           Start brainstorming →

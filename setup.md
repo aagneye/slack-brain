@@ -604,6 +604,10 @@ Expected: bot posts progress, then a Context Pack card with View Pack + Send to 
 
 ### 10.3 Configure Slack app (api.slack.com)
 
+> **Workspace admins (no code):** use [docs/ADD-SLACK-TO-YOUR-WORKSPACE.md](docs/ADD-SLACK-TO-YOUR-WORKSPACE.md)  
+> or [slackbrain.vercel.app/add-to-slack](https://slackbrain.vercel.app/add-to-slack).  
+> The steps below are for **developers** editing the Slack app at api.slack.com.
+
 1. Open your app → **OAuth & Permissions**.
 2. **Redirect URL:** `https://slackbrain.vercel.app/api/auth/callback/slack`
 3. **Bot Token Scopes:** `commands`, `chat:write`, `users:read`, `users:read.email`,

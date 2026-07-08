@@ -45,7 +45,7 @@ export default function BrainTeamPage() {
         <h2 className="font-semibold text-slate-900">Hackathon demo tip</h2>
         <p className="mt-2 text-sm text-slate-600">
           Judges can sign up with Google or Slack, then run{' '}
-          <code className="rounded bg-white px-1.5 py-0.5">/contextpack &lt;task&gt;</code> in your
+          <code className="rounded bg-white px-1.5 py-0.5">/slackbrain &lt;task&gt;</code> in your
           workspace to see the full agent flow.
         </p>
       </div>

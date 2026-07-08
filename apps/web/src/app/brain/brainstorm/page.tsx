@@ -8,7 +8,7 @@ export default function BrainstormPage() {
       <h1 className="mt-1 text-2xl font-bold text-slate-900">What should we investigate?</h1>
       <p className="mt-2 text-slate-600">
         Describe a task. The engine gathers, verifies and scores context before you send it to AI.
-        You can also use <code className="rounded bg-slate-100 px-1.5">/contextpack</code> in Slack.
+        You can also use <code className="rounded bg-slate-100 px-1.5">/slackbrain</code> in Slack.
       </p>
 
       <div className="card mt-8 shadow-soft">

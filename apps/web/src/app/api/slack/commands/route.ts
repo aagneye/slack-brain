@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { jobs, audit } from '@cpe/db';
+import { formatSlackCommandUsage, SLACK_SLASH_COMMAND } from '@cpe/shared';
 import { resolveWorkspaceUser } from '@/lib/workspace';
 import { enqueueContextJob } from '@/lib/queue';
 import { readVerifiedSlackBody } from '@/lib/slack-verify';
@@ -8,7 +9,7 @@ export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
 /**
- * POST /api/slack/commands — handles `/contextpack <task>`.
+ * POST /api/slack/commands — handles `/${SLACK_SLASH_COMMAND} <task>`.
  *
  * Slack requires a response within 3s, so we resolve the workspace, enqueue the
  * job, and immediately reply with a "Building Context Pack…" message. The worker
@@ -27,7 +28,7 @@ export async function POST(req: Request) {
   if (task.length < 3) {
     return NextResponse.json({
       response_type: 'ephemeral',
-      text: 'Usage: `/contextpack <what you want to investigate>`',
+      text: formatSlackCommandUsage(),
     });
   }
 

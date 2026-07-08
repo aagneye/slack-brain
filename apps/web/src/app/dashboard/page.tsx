@@ -8,7 +8,7 @@ export default function DashboardPage() {
         <h1 className="text-2xl font-bold">Build a Context Pack</h1>
         <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
           Describe a task. The engine gathers, verifies and scores context before you send it to an
-          AI. You can also trigger this from Slack with <code>/contextpack</code>.
+          AI. You can also trigger this from Slack with <code>/slackbrain</code>.
         </p>
         <div className="mt-6">
           <NewTaskForm />
