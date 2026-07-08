@@ -41,4 +41,11 @@ export const users = {
       data: { slackSearchTokenRef: tokenRef },
     });
   },
+
+  clearSlackSearchToken(userId: string) {
+    return prisma.appUser.update({
+      where: { id: userId },
+      data: { slackSearchTokenRef: null },
+    });
+  },
 };
