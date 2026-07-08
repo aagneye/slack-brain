@@ -4,6 +4,7 @@ import { auth } from '@/auth';
 import { AuthProviders } from '@/components/auth/AuthProviders';
 import { SignInButtons } from '@/components/auth/SignInButtons';
 import { isAuthenticatedSession } from '@/lib/auth-session';
+import { getOAuthProviderFlags } from '@/lib/oauth-providers';
 
 export default async function SignUpPage({
   searchParams,
@@ -12,8 +13,7 @@ export default async function SignUpPage({
 }) {
   const session = await auth();
   const callbackUrl = searchParams.callbackUrl ?? '/brain';
-  const showGoogle = !!(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET);
-  const showSlack = !!(process.env.SLACK_CLIENT_ID && process.env.SLACK_CLIENT_SECRET);
+  const { google: showGoogle, slack: showSlack } = getOAuthProviderFlags();
 
   if (isAuthenticatedSession(session)) {
     redirect(callbackUrl.startsWith('/') ? callbackUrl : '/brain');
