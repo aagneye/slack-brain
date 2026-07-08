@@ -8,12 +8,12 @@ const links = [
   { href: '/brain/brainstorm', label: 'Brainstorm', icon: '💡' },
   { href: '/brain/knowledge', label: 'Knowledge', icon: '🗺️' },
   { href: '/brain/team', label: 'Team', icon: '👥' },
+  { href: '/brain/connectors', label: 'Connections', icon: '🔌' },
   { href: '/brain/profile', label: 'Profile', icon: '👤' },
 ];
 
 const tools = [
   { href: '/dashboard', label: 'Packs' },
-  { href: '/connectors', label: 'Connectors' },
   { href: '/history', label: 'History' },
 ];
 
@@ -59,15 +59,22 @@ export function BrainNav({ userName }: { userName?: string | null }) {
         <p className="mt-6 px-3 py-2 text-xs font-semibold uppercase tracking-[0.14em] text-slate-400">
           Tools
         </p>
-        {tools.map((l) => (
-          <Link
-            key={l.href}
-            href={l.href}
-            className="block rounded-2xl px-3 py-2 text-sm text-slate-600 transition hover:bg-white/80 hover:text-slate-900"
-          >
-            {l.label}
-          </Link>
-        ))}
+        {tools.map((l) => {
+          const active = pathname === l.href || pathname.startsWith(`${l.href}/`);
+          return (
+            <Link
+              key={l.href}
+              href={l.href}
+              className={`block rounded-2xl px-3 py-2 text-sm transition ${
+                active
+                  ? 'bg-white/90 font-medium text-slate-900 shadow-sm'
+                  : 'text-slate-600 hover:bg-white/80 hover:text-slate-900'
+              }`}
+            >
+              {l.label}
+            </Link>
+          );
+        })}
       </nav>
     </aside>
   );
