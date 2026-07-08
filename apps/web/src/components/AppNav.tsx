@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { signOut } from '@/auth';
+import { SignOutButton } from '@/components/auth/SignOutButton';
 
 const links = [
   { href: '/brain', label: 'Brain' },
@@ -30,16 +30,7 @@ export function AppNav({ user }: { user?: { name?: string | null } }) {
         </div>
         <div className="flex items-center gap-3 text-sm">
           <span className="text-slate-500">{user?.name}</span>
-          <form
-            action={async () => {
-              'use server';
-              await signOut({ redirectTo: '/' });
-            }}
-          >
-            <button className="btn-ghost px-3 py-1" type="submit">
-              Sign out
-            </button>
-          </form>
+          <SignOutButton className="btn-ghost px-3 py-1" />
         </div>
       </div>
     </header>
