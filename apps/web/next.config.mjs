@@ -1,8 +1,12 @@
 /** @type {import('next').NextConfig} */
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { loadEnvConfig } from '@next/env';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+// Monorepo: load root .env so OAuth keys in ../../.env are available to Next.js.
+loadEnvConfig(path.join(__dirname, '../..'));
 
 const nextConfig = {
   reactStrictMode: true,
