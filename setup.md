@@ -14,8 +14,21 @@ variables it produces.
 > - [ ] `.env` filled in from `.env.example`
 > - [ ] `npm run db:push` then `npm run dev`
 > - [ ] (Deploy) Web → **Vercel**, Worker → **Render**, DB → **Neon**, Queue → **Upstash**
-> - [ ] (Deploy) Domain DNS (Google Cloud DNS) → Vercel, Slack URLs → Vercel
-> - [ ] (Deploy) Google OAuth + Slack OAuth for `/signup`
+> - [ ] (Deploy) Slack Request URLs → **Vercel only** (`https://slackbrain.vercel.app`)
+> - [ ] (Deploy) Render worker live → `https://slack-brain.onrender.com/health`
+> - [ ] (Demo) `/contextpack` in a Slack channel → Pack card → Send to AI
+
+**Live production (hackathon demo):**
+
+| Service | URL | Role |
+|---|---|---|
+| Web + Slack webhooks | `https://slackbrain.vercel.app` | Landing, `/brain`, all Slack Request URLs |
+| Worker (background jobs) | `https://slack-brain.onrender.com` | Health only (`/health`) — **do not** point Slack here |
+| Database | Neon | `DATABASE_URL` (pooled + `pgbouncer=true`) + `DIRECT_URL` |
+| Queue | Upstash | Same `REDIS_URL` on Vercel **and** Render |
+
+> **Important:** Slack always talks to **Vercel**. Render only pulls jobs from Redis and writes to Neon.
+> Jump to **[§10 Live demo — Slack Brain in real Slack](#10-live-demo--slack-brain-in-real-slack)** for the judge-ready setup script.
 
 ---
 
@@ -65,12 +78,13 @@ DATABASE_URL="postgresql://postgres:postgres@localhost:5432/cpe?schema=public"
    CREATE EXTENSION IF NOT EXISTS vector;
    ```
 
-3. Copy the **pooled** connection string into `DATABASE_URL` (append `?sslmode=require`).
+3. Copy the **pooled** connection string into `DATABASE_URL`. Append `?sslmode=require&pgbouncer=true`
+   (the `pgbouncer=true` flag is required for long-running workers on Render).
    Also copy the **direct** (non-pooled) string into `DIRECT_URL` — Prisma migrations need a direct
    connection.
 
 ```
-DATABASE_URL="postgresql://USER:PASSWORD@ep-xxxx-pooler.region.aws.neon.tech/cpe?sslmode=require"
+DATABASE_URL="postgresql://USER:PASSWORD@ep-xxxx-pooler.region.aws.neon.tech/cpe?sslmode=require&pgbouncer=true"
 DIRECT_URL="postgresql://USER:PASSWORD@ep-xxxx.region.aws.neon.tech/cpe?sslmode=require"
 ```
 
@@ -319,9 +333,9 @@ npm run dev                    # runs web (3000) + worker together
 Open http://localhost:3000 → **Sign in with Slack** → **Connectors** → connect GitHub →
 trigger a Context Pack from the dashboard or `/contextpack` in Slack.
 
-### 7.1 Using Slack Brain inside Slack
+### 7.1 Using Slack Brain inside Slack (local)
 
-Once `npm run dev` is running (or production is deployed) and Slack Request URLs point at your app:
+Once `npm run dev` is running and Slack Request URLs point at your ngrok URL:
 
 1. In any channel where the bot is installed, run:
 
@@ -336,6 +350,8 @@ Once `npm run dev` is running (or production is deployed) and Slack Request URLs
    - **Open in Cursor** — handoff link for IDE workflows.
 4. Retrieval uses your **user search token** (`SLACK_USER_TOKEN` or Connectors → Slack Search).
    The bot token only posts messages.
+
+For **production** (Vercel + Render already deployed), skip ngrok and follow **§10** instead.
 
 **Local dev checklist for Slack:**
 
@@ -386,21 +402,22 @@ database and queue. You still need:
 ### Production setup order (do in this sequence)
 
 ```
-1. Neon     → already have DATABASE_URL + DIRECT_URL
-2. Upstash  → already have REDIS_URL
-3. Vercel   → deploy apps/web, import .env.vercel
-4. Domain   → Vercel Domains + Google DNS records
-5. Render   → deploy worker (render.yaml), same env as Vercel
-6. Slack    → update 4 Request URLs, reinstall app
-7. Google   → OAuth redirect for /signup
-8. Smoke    → /api/health, /signup, /brain, /contextpack in Slack
+1. Neon     → DATABASE_URL (pooled + pgbouncer=true) + DIRECT_URL
+2. Upstash  → REDIS_URL (same on Vercel and Render)
+3. Vercel   → deploy apps/web → https://slackbrain.vercel.app
+4. Render   → deploy worker → https://slack-brain.onrender.com/health
+5. Slack    → point all 4 Request URLs at Vercel (§10.3)
+6. AI       → Ollama host reachable from Render OR cloud LLM keys
+7. Smoke    → /api/health, /contextpack in Slack channel
+8. (Optional) Custom domain → creator.tmi.production + Google DNS
 ```
 
 ```bash
 # Generate Vercel import file from your local .env
 npm run env:vercel
 # → upload .env.vercel in Vercel → Settings → Environment Variables → Import .env
-# → copy same values into Render dashboard
+# → copy same worker vars into Render dashboard (npm run env:render for .env.render)
+npm run smoke:prod   # pre-flight check before deploy
 ```
 
 ---
@@ -411,32 +428,37 @@ npm run env:vercel
 
 ### Slack Request URLs (paste into api.slack.com)
 
+**Use your Vercel URL** — currently `https://slackbrain.vercel.app`:
+
 | Slack setting | Request URL |
 |---|---|
-| OAuth redirect | `https://creator.tmi.production/api/auth/callback/slack` |
-| Slash command `/contextpack` | `https://creator.tmi.production/api/slack/commands` |
-| Interactivity | `https://creator.tmi.production/api/slack/interactions` |
-| Event subscriptions | `https://creator.tmi.production/api/slack/events` |
+| OAuth redirect | `https://slackbrain.vercel.app/api/auth/callback/slack` |
+| Slash command `/contextpack` | `https://slackbrain.vercel.app/api/slack/commands` |
+| Interactivity | `https://slackbrain.vercel.app/api/slack/interactions` |
+| Event subscriptions | `https://slackbrain.vercel.app/api/slack/events` |
+
+If you add a custom domain later (e.g. `creator.tmi.production`), replace `slackbrain.vercel.app`
+in all four URLs and in `APP_BASE_URL` / `AUTH_URL`.
 
 **Import env to Vercel:** run `npm run env:vercel` → upload `.env.vercel` in Vercel → Environment Variables → Import .env (file is gitignored; never commit it).
 
 Verify URLs from your deploy:
 
 ```bash
-curl https://creator.tmi.production/api/health
-# → "slack": { "slashCommand": "https://...", ... }
+curl https://slackbrain.vercel.app/api/health
+# → "status": "ok" and "slack": { "slashCommand": "https://...", ... }
 ```
 
 Re-install the Slack app after changing URLs. Use `/contextpack` in a **channel** (not the app DM).
 
 ### 8.2 Web portal → Vercel
 
-Production domain: **`https://creator.tmi.production`**
+Production URL: **`https://slackbrain.vercel.app`**
 
 1. Import the GitHub repo at [vercel.com/new](https://vercel.com/new).
 2. **Root Directory:** `apps/web`. Framework: Next.js.
 3. Add env vars from [`.env.production.example`](.env.production.example).
-4. Set `APP_BASE_URL` and `AUTH_URL` to `https://creator.tmi.production` (no trailing slash).
+4. Set `APP_BASE_URL` and `AUTH_URL` to `https://slackbrain.vercel.app` (no trailing slash).
 5. Deploy → confirm `GET /api/health` returns `"status": "ok"`.
 
 `apps/web/vercel.json` configures the monorepo install/build from the repo root.
@@ -445,28 +467,48 @@ Production domain: **`https://creator.tmi.production`**
 
 The worker is a long-running BullMQ consumer — not suitable for Vercel serverless.
 
+**Worker health check (Render is live):** `https://slack-brain.onrender.com/health` → `{"status":"ok","service":"cpe-worker","queue":"context"}`
+
 **Env vars on Render** (same Neon + Upstash as Vercel, plus worker-specific):
 
 | Variable | On Render |
 |---|---|
-| `DATABASE_URL` | Same as Vercel |
-| `DIRECT_URL` | Same as Vercel (migrations on deploy) |
-| `REDIS_URL` | Same as Vercel — **must match** |
-| `APP_BASE_URL` | Your Vercel/domain URL |
-| `SLACK_BOT_TOKEN` | Same as Vercel |
-| `SLACK_USER_TOKEN` | Same as Vercel |
-| `GITHUB_TOKEN` | Same as Vercel |
-| `OLLAMA_*` or cloud LLM keys | Same as Vercel |
+| `DATABASE_URL` | Neon **pooled** URL with `pgbouncer=true` |
+| `DIRECT_URL` | Neon **direct** URL (migrations) |
+| `REDIS_URL` | Same as Vercel — **must match exactly** |
+| `APP_BASE_URL` | `https://slackbrain.vercel.app` (Pack links in Slack) |
+| `SLACK_BOT_TOKEN` | Same as Vercel (`xoxb-...`) |
+| `SLACK_USER_TOKEN` | Optional — improves Slack search |
+| `GITHUB_TOKEN` | Optional — GitHub retrieval |
+| `OLLAMA_ENABLED` | `true` if using Ollama |
+| `OLLAMA_BASE_URL` | Remote host reachable from Render (not `localhost`) |
+| `OLLAMA_CHAT_MODEL` | `llama3.2` |
+| `OLLAMA_EMBED_MODEL` | `nomic-embed-text` |
+| `EMBEDDINGS_PROVIDER` | `ollama` or `openai` |
 | `WORKER_CONCURRENCY` | Optional (default `4`) |
 
-**Not needed on Render:** `AUTH_SECRET`, `GOOGLE_CLIENT_*`, `SLACK_SIGNING_SECRET` (web-only).
+**Not needed on Render:** `AUTH_SECRET`, `GOOGLE_CLIENT_*`, `SLACK_SIGNING_SECRET`, `SLACK_CLIENT_*` (web-only).
 
-1. **New → Blueprint** on Render (uses [`render.yaml`](render.yaml)) **or** create a Background Worker manually.
-2. Set the same `DATABASE_URL`, `DIRECT_URL`, `REDIS_URL` as Vercel.
-3. Set `APP_BASE_URL` to your **Vercel URL** (Pack links in Slack).
-4. Set Ollama vars if not using cloud LLM keys (`OLLAMA_BASE_URL` must be reachable from Render).
+**Render dashboard settings:**
 
-Worker logs: `worker ready, listening on "context" queue`.
+| Setting | Value |
+|---|---|
+| **Type** | Background Worker *(preferred)* or Web Service with health on `PORT` |
+| **Build command** | `bash scripts/render-build.sh` |
+| **Start command** | `npm run start -w @cpe/worker` |
+
+Worker logs should show:
+
+```
+worker production checks passed
+worker ready, listening on "context" queue
+```
+
+Warnings that are OK for hackathon demo:
+
+- `GITHUB_TOKEN not set` — GitHub retrieval skipped
+- `SLACK_USER_TOKEN not set` — add later for Slack message search
+- `ollama enabled but unreachable` — fix `OLLAMA_BASE_URL` before Send-to-AI works
 
 ### 8.4 Database → Neon (prod)
 
@@ -489,15 +531,138 @@ Migrations run automatically on Render deploy (`preDeployCommand` in `render.yam
 
 ### 8.6 Post-deploy checklist
 
-- [ ] `GET https://creator.tmi.production/api/health` → ok + `slack` URLs
-- [ ] Render worker running with **same** `REDIS_URL` as Vercel
-- [ ] All four Slack Request URLs updated and app reinstalled
-- [ ] Google OAuth redirect URI includes production domain
-- [ ] `/signup` works (Google + Slack)
-- [ ] `/brain` loads after sign-in
-- [ ] `/contextpack test` in a Slack channel → Pack card → Send to AI
+- [ ] `GET https://slackbrain.vercel.app/api/health` → `"status": "ok"` + `slack` URLs
+- [ ] `GET https://slack-brain.onrender.com/health` → `"status": "ok"`, `"service": "cpe-worker"`
+- [ ] Render worker logs: `worker ready, listening on "context" queue`
+- [ ] `REDIS_URL` identical on Vercel and Render
+- [ ] `DATABASE_URL` on Render includes `pgbouncer=true`
+- [ ] All four Slack Request URLs point at **Vercel** (not Render)
+- [ ] Slack app reinstalled to workspace after URL changes
+- [ ] `/contextpack demo task` in a Slack **channel** → progress → Pack card
 
 See also **[PRODUCTION.md](PRODUCTION.md)** for troubleshooting.
+
+---
+
+## 10. Live demo — Slack Brain in real Slack
+
+Use this section to finish setup and run the hackathon demo. You can paste **§10.1** into ChatGPT
+(or any assistant) and work through the checklist together.
+
+### 10.1 Copy-paste prompt for your AI assistant
+
+```
+I am deploying Slack Brain (Context Pack Engine) for a hackathon demo.
+
+Architecture:
+- Web + Slack webhooks: Vercel at https://slackbrain.vercel.app
+- Background worker: Render at https://slack-brain.onrender.com (health only, NOT for Slack URLs)
+- Database: Neon Postgres (DATABASE_URL pooled with pgbouncer=true, DIRECT_URL direct)
+- Queue: Upstash Redis (same REDIS_URL on Vercel and Render)
+
+Help me complete these steps one at a time. Ask me for missing values before proceeding.
+
+1. Vercel env vars — confirm these are set for Production:
+   APP_BASE_URL, AUTH_URL, AUTH_SECRET, DATABASE_URL, DIRECT_URL, REDIS_URL,
+   SLACK_CLIENT_ID, SLACK_CLIENT_SECRET, SLACK_SIGNING_SECRET, SLACK_BOT_TOKEN,
+   SLACK_USER_TOKEN (optional), GITHUB_TOKEN (optional),
+   OLLAMA_ENABLED + OLLAMA_BASE_URL OR OPENAI_API_KEY / ANTHROPIC_API_KEY
+
+2. Render env vars — same DATABASE_URL, DIRECT_URL, REDIS_URL, SLACK_BOT_TOKEN, APP_BASE_URL,
+   OLLAMA_* or cloud LLM keys. Build: bash scripts/render-build.sh. Start: npm run start -w @cpe/worker
+
+3. Slack app at api.slack.com — set these Request URLs to Vercel ONLY:
+   OAuth redirect:     https://slackbrain.vercel.app/api/auth/callback/slack
+   Slash /contextpack: https://slackbrain.vercel.app/api/slack/commands
+   Interactivity:      https://slackbrain.vercel.app/api/slack/interactions
+   Events:             https://slackbrain.vercel.app/api/slack/events
+   Then reinstall app to workspace.
+
+4. Verify:
+   curl https://slackbrain.vercel.app/api/health
+   curl https://slack-brain.onrender.com/health
+
+5. Demo in Slack: in a channel, run:
+   /contextpack what should we know before shipping the payments API change?
+
+Expected: bot posts progress, then a Context Pack card with View Pack + Send to AI buttons.
+```
+
+### 10.2 What must be working before the demo
+
+| Check | How to verify | If it fails |
+|---|---|---|
+| Vercel web | `curl https://slackbrain.vercel.app/api/health` | Redeploy Vercel; fix env vars |
+| Render worker | `curl https://slack-brain.onrender.com/health` | Check Render logs; fix `REDIS_URL` / Neon URL |
+| Shared queue | Same `REDIS_URL` on both hosts | Copy exact Upstash URL to Vercel + Render |
+| Slack slash command | Run `/contextpack test` in a channel | Update Request URL to Vercel; reinstall app |
+| Bot in channel | Invite `@Context Pack Engine` (or your app name) | `/invite @YourApp` in the channel |
+| AI (Send to AI button) | Ollama reachable from Render **or** cloud API key | Set remote `OLLAMA_BASE_URL`; not `localhost` |
+
+### 10.3 Configure Slack app (api.slack.com)
+
+1. Open your app → **OAuth & Permissions**.
+2. **Redirect URL:** `https://slackbrain.vercel.app/api/auth/callback/slack`
+3. **Bot Token Scopes:** `commands`, `chat:write`, `users:read`, `users:read.email`,
+   `channels:history`, `groups:history`
+4. **User Token Scopes:** `search:read` (for message retrieval), `openid`, `email`, `profile` (for sign-in)
+5. **Slash Commands** → `/contextpack` → Request URL:
+   `https://slackbrain.vercel.app/api/slack/commands`
+6. **Interactivity** ON → Request URL:
+   `https://slackbrain.vercel.app/api/slack/interactions`
+7. **Event Subscriptions** ON → Request URL:
+   `https://slackbrain.vercel.app/api/slack/events` → subscribe to `app_mention`
+8. **Install App** → reinstall to workspace (required after URL changes)
+9. Copy tokens to Vercel **and** Render:
+   - `SLACK_BOT_TOKEN` (`xoxb-...`) — required
+   - `SLACK_USER_TOKEN` (`xoxp-...` with `search:read`) — optional but better retrieval
+
+### 10.4 Run the demo in Slack
+
+1. Open a **public or private channel** in your workspace (not a DM with the app).
+2. Invite the bot if needed: `/invite @Context Pack Engine`
+3. Run:
+
+   ```
+   /contextpack summarize what the team discussed about the Render deploy this week
+   ```
+
+4. Watch for:
+   - Immediate ack from Vercel (slash command received)
+   - Progress updates in the thread
+   - **Context Pack card** posted by the worker (via `SLACK_BOT_TOKEN`)
+5. Click **View full Pack** → opens `https://slackbrain.vercel.app/p/...`
+6. Click **Send to AI** (Ollama or cloud) → answer appears in the Slack thread
+
+**Good demo prompts** (pick one that matches your workspace):
+
+```
+/contextpack what are the open questions about our hackathon demo?
+/contextpack summarize recent #engineering messages about deploy failures
+/contextpack build context for onboarding a new engineer to Slack Brain
+```
+
+### 10.5 Optional — web portal for judges
+
+| URL | Purpose |
+|---|---|
+| `https://slackbrain.vercel.app` | Landing page |
+| `https://slackbrain.vercel.app/signup` | Google + Slack sign-in |
+| `https://slackbrain.vercel.app/brain` | Brain UI (after sign-in) |
+
+Requires `AUTH_SECRET` on Vercel. Google OAuth needs redirect URI:
+`https://slackbrain.vercel.app/api/auth/callback/google`
+
+### 10.6 Still broken? Quick fixes
+
+| Symptom | Fix |
+|---|---|
+| `/contextpack` does nothing | Slack URL wrong → must be Vercel; reinstall app |
+| Command ack but no Pack card | Worker not running or `REDIS_URL` mismatch → check Render logs |
+| `dispatch_failed` in Slack | `SLACK_SIGNING_SECRET` wrong on Vercel |
+| Pack card but empty retrieval | Add `SLACK_USER_TOKEN` or connect Slack Search in portal |
+| Send to AI fails | `OLLAMA_BASE_URL` must be reachable from Render (use VPS/tunnel, not localhost) |
+| `DATABASE_URL missing pgbouncer=true` | Add `&pgbouncer=true` to Neon pooled URL on Render |
 
 ---
 
