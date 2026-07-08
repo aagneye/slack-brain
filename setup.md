@@ -16,7 +16,7 @@ variables it produces.
 > - [ ] (Deploy) Web → **Vercel**, Worker → **Render**, DB → **Neon**, Queue → **Upstash**
 > - [ ] (Deploy) Slack Request URLs → **Vercel only** (`https://slackbrain.vercel.app`)
 > - [ ] (Deploy) Render worker live → `https://slack-brain.onrender.com/health`
-> - [ ] (Demo) `/contextpack` in a Slack channel → Pack card → Send to AI
+> - [ ] (Demo) `/slackbrain` in a Slack channel → Pack card → Send to AI
 
 **Live production (hackathon demo):**
 
@@ -170,9 +170,9 @@ https://<your-tunnel-or-domain>/api/auth/callback/slack
 
 ### 3.3 Slash command
 
-- **Command:** `/contextpack`
+- **Command:** `/slackbrain`
 - **Request URL:** `https://<your-tunnel-or-domain>/api/slack/commands`
-- **Short description:** "Build a verified Context Pack for a task"
+- **Short description:** "Ask Slack Brain to gather and verify context for a task"
 
 ### 3.4 Interactivity & Shortcuts
 
@@ -331,7 +331,7 @@ npm run dev                    # runs web (3000) + worker together
 ```
 
 Open http://localhost:3000 → **Sign in with Slack** → **Connectors** → connect GitHub →
-trigger a Context Pack from the dashboard or `/contextpack` in Slack.
+trigger a Context Pack from the dashboard or `/slackbrain` in Slack.
 
 ### 7.1 Using Slack Brain inside Slack (local)
 
@@ -340,7 +340,7 @@ Once `npm run dev` is running and Slack Request URLs point at your ngrok URL:
 1. In any channel where the bot is installed, run:
 
    ```
-   /contextpack summarize recent deploy issues for payments service
+   /slackbrain summarize recent deploy issues for payments service
    ```
 
 2. The bot posts a **progress message**, then a **Context Pack card** when the worker finishes.
@@ -383,7 +383,7 @@ This project uses **five services** in production. You do **not** put everything
 
 **Yes**, for a full production demo. Without Render:
 
-- Vercel can receive `/contextpack` and enqueue jobs to Redis
+- Vercel can receive `/slackbrain` and enqueue jobs to Redis
 - **Nothing processes the queue** — jobs stay stuck, no Pack card in Slack
 
 Render runs `apps/worker`, which pulls jobs from Upstash and writes results to Neon.
@@ -407,7 +407,7 @@ database and queue. You still need:
 4. Render   → deploy worker → https://slack-brain.onrender.com/health
 5. Slack    → point all 4 Request URLs at Vercel (§10.3)
 6. AI       → Ollama host reachable from Render OR cloud LLM keys
-7. Smoke    → /api/health, /contextpack in Slack channel
+7. Smoke    → /api/health, /slackbrain in Slack channel
 ```
 
 No custom domain needed — use `https://slackbrain.vercel.app` everywhere (`APP_BASE_URL`, `AUTH_URL`, Slack URLs, Google OAuth redirect).
@@ -433,7 +433,7 @@ npm run smoke:prod   # pre-flight check before deploy
 | Slack setting | Request URL |
 |---|---|
 | OAuth redirect | `https://slackbrain.vercel.app/api/auth/callback/slack` |
-| Slash command `/contextpack` | `https://slackbrain.vercel.app/api/slack/commands` |
+| Slash command `/slackbrain` | `https://slackbrain.vercel.app/api/slack/commands` |
 | Interactivity | `https://slackbrain.vercel.app/api/slack/interactions` |
 | Event subscriptions | `https://slackbrain.vercel.app/api/slack/events` |
 
@@ -449,7 +449,7 @@ curl https://slackbrain.vercel.app/api/health
 # → "status": "ok" and "slack": { "slashCommand": "https://...", ... }
 ```
 
-Re-install the Slack app after changing URLs. Use `/contextpack` in a **channel** (not the app DM).
+Re-install the Slack app after changing URLs. Use `/slackbrain` in a **channel** (not the app DM).
 
 ### 8.2 Web portal → Vercel
 
@@ -541,7 +541,7 @@ If you add one later:
 - [ ] `DATABASE_URL` on Render includes `pgbouncer=true`
 - [ ] All four Slack Request URLs point at **Vercel** (not Render)
 - [ ] Slack app reinstalled to workspace after URL changes
-- [ ] `/contextpack demo task` in a Slack **channel** → progress → Pack card
+- [ ] `/slackbrain demo task` in a Slack **channel** → progress → Pack card
 
 See also **[PRODUCTION.md](PRODUCTION.md)** for troubleshooting.
 
@@ -576,7 +576,7 @@ Help me complete these steps one at a time. Ask me for missing values before pro
 
 3. Slack app at api.slack.com — set these Request URLs to Vercel ONLY:
    OAuth redirect:     https://slackbrain.vercel.app/api/auth/callback/slack
-   Slash /contextpack: https://slackbrain.vercel.app/api/slack/commands
+   Slash /slackbrain: https://slackbrain.vercel.app/api/slack/commands
    Interactivity:      https://slackbrain.vercel.app/api/slack/interactions
    Events:             https://slackbrain.vercel.app/api/slack/events
    Then reinstall app to workspace.
@@ -586,7 +586,7 @@ Help me complete these steps one at a time. Ask me for missing values before pro
    curl https://slack-brain.onrender.com/health
 
 5. Demo in Slack: in a channel, run:
-   /contextpack what should we know before shipping the payments API change?
+   /slackbrain what should we know before shipping the payments API change?
 
 Expected: bot posts progress, then a Context Pack card with View Pack + Send to AI buttons.
 ```
@@ -598,7 +598,7 @@ Expected: bot posts progress, then a Context Pack card with View Pack + Send to 
 | Vercel web | `curl https://slackbrain.vercel.app/api/health` | Redeploy Vercel; fix env vars |
 | Render worker | `curl https://slack-brain.onrender.com/health` | Check Render logs; fix `REDIS_URL` / Neon URL |
 | Shared queue | Same `REDIS_URL` on both hosts | Copy exact Upstash URL to Vercel + Render |
-| Slack slash command | Run `/contextpack test` in a channel | Update Request URL to Vercel; reinstall app |
+| Slack slash command | Run `/slackbrain test` in a channel | Update Request URL to Vercel; reinstall app |
 | Bot in channel | Invite `@Context Pack Engine` (or your app name) | `/invite @YourApp` in the channel |
 | AI (Send to AI button) | Ollama reachable from Render **or** cloud API key | Set remote `OLLAMA_BASE_URL`; not `localhost` |
 
@@ -613,7 +613,7 @@ Expected: bot posts progress, then a Context Pack card with View Pack + Send to 
 3. **Bot Token Scopes:** `commands`, `chat:write`, `users:read`, `users:read.email`,
    `channels:history`, `groups:history`
 4. **User Token Scopes:** `search:read` (for message retrieval), `openid`, `email`, `profile` (for sign-in)
-5. **Slash Commands** → `/contextpack` → Request URL:
+5. **Slash Commands** → `/slackbrain` → Request URL:
    `https://slackbrain.vercel.app/api/slack/commands`
 6. **Interactivity** ON → Request URL:
    `https://slackbrain.vercel.app/api/slack/interactions`
@@ -631,7 +631,7 @@ Expected: bot posts progress, then a Context Pack card with View Pack + Send to 
 3. Run:
 
    ```
-   /contextpack summarize what the team discussed about the Render deploy this week
+   /slackbrain summarize what the team discussed about the Render deploy this week
    ```
 
 4. Watch for:
@@ -644,9 +644,9 @@ Expected: bot posts progress, then a Context Pack card with View Pack + Send to 
 **Good demo prompts** (pick one that matches your workspace):
 
 ```
-/contextpack what are the open questions about our hackathon demo?
-/contextpack summarize recent #engineering messages about deploy failures
-/contextpack build context for onboarding a new engineer to Slack Brain
+/slackbrain what are the open questions about our hackathon demo?
+/slackbrain summarize recent #engineering messages about deploy failures
+/slackbrain build context for onboarding a new engineer to Slack Brain
 ```
 
 ### 10.5 Optional — web portal for judges
@@ -664,7 +664,7 @@ Requires `AUTH_SECRET` on Vercel. Google OAuth needs redirect URI:
 
 | Symptom | Fix |
 |---|---|
-| `/contextpack` does nothing | Slack URL wrong → must be Vercel; reinstall app |
+| `/slackbrain` does nothing | Slack URL wrong → must be Vercel; reinstall app |
 | Command ack but no Pack card | Worker not running or `REDIS_URL` mismatch → check Render logs |
 | `dispatch_failed` in Slack | `SLACK_SIGNING_SECRET` wrong on Vercel |
 | Pack card but empty retrieval | Add `SLACK_USER_TOKEN` or connect Slack Search in portal |

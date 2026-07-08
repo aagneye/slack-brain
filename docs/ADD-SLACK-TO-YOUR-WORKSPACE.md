@@ -10,7 +10,7 @@
 ## What you are doing
 
 You will install the **Slack Brain** app into **your company’s Slack workspace** (once per company).
-After that, anyone in the workspace can run `/contextpack` in a channel to build verified Context
+After that, anyone in the workspace can run `/slackbrain` in a channel to build verified Context
 Packs.
 
 Each Slack workspace is kept separate — your company’s data does not mix with other companies.
@@ -23,7 +23,7 @@ Each Slack workspace is kept separate — your company’s data does not mix wit
 |---|---|
 | **Slack workspace admin** (or permission to install apps) | Only admins can add apps to a workspace |
 | Slack Brain **hosted and running** | Web: `https://slackbrain.vercel.app` · Worker: `https://slack-brain.onrender.com/health` |
-| A channel for testing (e.g. `#engineering` or `#general`) | `/contextpack` works in channels, not only in DMs |
+| A channel for testing (e.g. `#engineering` or `#general`) | `/slackbrain` works in channels, not only in DMs |
 
 Check the service is up:
 
@@ -92,7 +92,7 @@ The bot must be in the channel where people will run commands.
 In that channel, type:
 
 ```
-/contextpack what should our team know before the next production deploy?
+/slackbrain what should our team know before the next production deploy?
 ```
 
 **What should happen:**
@@ -106,9 +106,9 @@ In that channel, type:
 **Good first prompts:**
 
 ```
-/contextpack summarize open questions about our hackathon demo
-/contextpack what did we discuss about deploy failures this week?
-/contextpack build onboarding context for a new engineer
+/slackbrain summarize open questions about our hackathon demo
+/slackbrain what did we discuss about deploy failures this week?
+/slackbrain build onboarding context for a new engineer
 ```
 
 ---
@@ -129,7 +129,7 @@ user (or an admin) can connect a Slack **user token** with `search:read`:
 
 ## Who can use it after install?
 
-| Person | Can they use `/contextpack`? | Notes |
+| Person | Can they use `/slackbrain`? | Notes |
 |---|---|---|
 | Anyone in the workspace | **Yes** | No separate website signup required |
 | People outside the workspace | **No** | They are a different company / Slack workspace |
@@ -143,8 +143,8 @@ First use auto-creates a workspace record and a user record for whoever ran the 
 
 | Problem | What to try |
 |---|---|
-| `/contextpack` not found | App not installed — redo Step 1 |
-| “Usage: `/contextpack <task>`” | Add a task after the command (at least 3 characters) |
+| `/slackbrain` not found | App not installed — redo Step 1 |
+| “Usage: `/slackbrain <task>`” | Add a task after the command (at least 3 characters) |
 | Command does nothing | Check [health](https://slackbrain.vercel.app/api/health); contact whoever hosts Slack Brain |
 | Bot replies but no Pack card | Background worker may be down — check `https://slack-brain.onrender.com/health` |
 | Empty Slack retrieval | Connect Slack Search token (Step 5) or ask admin to set workspace search token |
@@ -159,7 +159,7 @@ First use auto-creates a workspace record and a user record for whoever ran the 
 [ ] https://slackbrain.vercel.app/api/health returns ok
 [ ] Installed Slack Brain via Add to Slack (Step 1)
 [ ] Invited bot to a test channel (Step 3)
-[ ] Ran /contextpack <task> successfully (Step 4)
+[ ] Ran /slackbrain <task> successfully (Step 4)
 [ ] (Optional) Connected Slack Search on the web for better retrieval (Step 5)
 ```
 

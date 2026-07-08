@@ -36,7 +36,7 @@ point.
 
 | Surface | Who uses it | What they do |
 |---|---|---|
-| **Slack** (primary) | Engineers in a company workspace | Run `/contextpack <task>` in a channel; get progress + Pack card in-thread |
+| **Slack** (primary) | Engineers in a company workspace | Run `/slackbrain <task>` in a channel; get progress + Pack card in-thread |
 | **Web** (`slackbrain.vercel.app`) | Same people, when they want more detail | Review a Pack, connect GitHub / Slack search, browse Brain UI |
 
 ### The Slack-first flow (no website signup required)
@@ -49,7 +49,7 @@ This is the intended hackathon demo path:
 2. **Any teammate** opens a channel and runs:
 
    ```
-   /contextpack what do we know about the payments API outage?
+   /slackbrain what do we know about the payments API outage?
    ```
 
 3. Slack sends the command to our server. We identify:
@@ -72,7 +72,7 @@ Slack workspace (Acme Corp)     →  Workspace in DB  →  jobs, packs, connecto
 Slack workspace (Other Inc)     →  different Workspace →  completely separate data
 ```
 
-- Acme’s `/contextpack` jobs only see Acme’s retrieval scope and stored packs.
+- Acme’s `/slackbrain` jobs only see Acme’s retrieval scope and stored packs.
 - Another company’s Slack workspace never shares data with yours.
 - Within a company, each job is tied to the **user who ran the command** (`createdBy`), so packs
   and audit events know who triggered what.
@@ -84,7 +84,7 @@ identity system.
 
 | Goal | Need web login? | Which sign-in? |
 |---|---|---|
-| Run `/contextpack` in Slack | **No** | — (Slack app install is enough) |
+| Run `/slackbrain` in Slack | **No** | — (Slack app install is enough) |
 | Open a Pack link from a Slack card | **No** | `/p/<slug>` is a public review page |
 | Connect **your** Slack search token (`xoxp-`) for better retrieval | **Yes** | **Sign in with Slack** (links your web session to your workspace) |
 | Connect GitHub, view job history, Brain UI | **Yes** | **Sign in with Slack** recommended |
@@ -97,11 +97,11 @@ clicking around the Brain UI). It does **not** replace Slack for the main workfl
 
 | Sign-in method | Purpose |
 |---|---|
-| **Slack** (recommended for web) | Links your browser session to your **Slack workspace** (`slackTeamId`). Needed for connectors, workspace-scoped settings, and matching the same identity you use in `/contextpack`. |
+| **Slack** (recommended for web) | Links your browser session to your **Slack workspace** (`slackTeamId`). Needed for connectors, workspace-scoped settings, and matching the same identity you use in `/slackbrain`. |
 | **Google** (optional) | Opens the Brain UI (`/brain`) without going through Slack OAuth. Fine for a UI demo; does **not** auto-link your company’s Slack data unless you also use Slack sign-in. |
 
 **For a real team using Slack Brain:**  
-**[Install Slack Brain in your workspace (admin guide)](docs/ADD-SLACK-TO-YOUR-WORKSPACE.md)** → use `/contextpack` in channels.  
+**[Install Slack Brain in your workspace (admin guide)](docs/ADD-SLACK-TO-YOUR-WORKSPACE.md)** → use `/slackbrain` in channels.  
 Team members who want to connect sources or browse history should **Sign in with Slack** on the website.
 
 ### End-to-end diagram
@@ -110,7 +110,7 @@ Team members who want to connect sources or browse history should **Sign in with
 ┌─────────────────────────────────────────────────────────────────────────┐
 │  Acme Corp Slack workspace                                              │
 │                                                                         │
-│  Engineer:  /contextpack debug checkout failures                        │
+│  Engineer:  /slackbrain debug checkout failures                        │
 │       │                                                                 │
 │       ▼                                                                 │
 │  Vercel (web API)  ──enqueue──►  Upstash Redis  ──►  Render worker    │
@@ -138,11 +138,11 @@ Optional web path (same person, same company):
 ### Typical journeys
 
 **Engineer (day to day)**  
-Slack only → `/contextpack` → read Pack card → Send to AI → done.
+Slack only → `/slackbrain` → read Pack card → Send to AI → done.
 
 **Engineer (first time, better retrieval)**  
 Sign in with Slack on web → Connectors → paste Slack user token (`search:read`) → back to Slack →
-`/contextpack` now searches messages you can see.
+`/slackbrain` now searches messages you can see.
 
 **Admin / demo**  
 **[Add Slack Brain to your Slack workspace](docs/ADD-SLACK-TO-YOUR-WORKSPACE.md)** → invite bot to `#engineering` → run a demo prompt → share Pack link with judges.
@@ -151,7 +151,7 @@ Sign in with Slack on web → Connectors → paste Slack user token (`search:rea
 
 ## How it works (pipeline)
 
-1. **Trigger** — `/contextpack <task>` in Slack or start a job from the web dashboard.
+1. **Trigger** — `/slackbrain <task>` in Slack or start a job from the web dashboard.
 2. **Identify** — resolve company (`team_id`) and user (`user_id`); scope all data to that workspace.
 3. **Retrieve** — fan out to Slack search, GitHub, etc. (per connected sources).
 4. **Verify** — rank, dedupe, flag stale data, contradictions, and gaps.
@@ -228,7 +228,7 @@ npm run dev                   # web (port 3000) + worker
 ```
 
 **Local Slack demo:** expose port 3000 with ngrok, point Slack Request URLs at it, then run
-`/contextpack <task>` in a channel — see [setup.md](setup.md).
+`/slackbrain <task>` in a channel — see [setup.md](setup.md).
 
 **Local web demo:** open http://localhost:3000 → **Sign in with Slack** → **Connectors** → connect
 GitHub → trigger a Pack from the dashboard or Slack.
