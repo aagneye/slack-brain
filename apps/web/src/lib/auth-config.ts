@@ -1,13 +1,14 @@
 import type { NextAuthConfig } from 'next-auth';
 import Google from 'next-auth/providers/google';
 import Slack from 'next-auth/providers/slack';
+import { envVar } from '@/lib/oauth-providers';
 
 /**
  * Resolves AUTH_SECRET. Production requires a real value; dev uses a local fallback so
  * `npm run dev` works before `.env` is fully filled in.
  */
 export function resolveAuthSecret(): string {
-  const secret = process.env.AUTH_SECRET?.trim();
+  const secret = envVar('AUTH_SECRET');
   if (secret) return secret;
   if (process.env.NODE_ENV === 'development') {
     return 'development-only-insecure-auth-secret';
@@ -18,48 +19,47 @@ export function resolveAuthSecret(): string {
 function buildProviders() {
   const providers: NextAuthConfig['providers'] = [];
 
-  if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
-    providers.push(
-      Google({
-        clientId: process.env.GOOGLE_CLIENT_ID,
-        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      }),
-    );
+  const googleId = envVar('GOOGLE_CLIENT_ID');
+  const googleSecret = envVar('GOOGLE_CLIENT_SECRET');
+  if (googleId && googleSecret) {
+    providers.push(Google({ clientId: googleId, clientSecret: googleSecret }));
   }
 
-  if (process.env.SLACK_CLIENT_ID && process.env.SLACK_CLIENT_SECRET) {
-    providers.push(
-      Slack({
-        clientId: process.env.SLACK_CLIENT_ID,
-        clientSecret: process.env.SLACK_CLIENT_SECRET,
-      }),
-    );
+  const slackId = envVar('SLACK_CLIENT_ID');
+  const slackSecret = envVar('SLACK_CLIENT_SECRET');
+  if (slackId && slackSecret) {
+    providers.push(Slack({ clientId: slackId, clientSecret: slackSecret }));
   }
 
   return providers;
 }
 
-export const authConfig = {
-  trustHost: true,
-  secret: resolveAuthSecret(),
-  providers: buildProviders(),
-  session: { strategy: 'jwt' as const },
-  callbacks: {
-    async jwt({ token, profile }) {
-      const slackProfile = profile as { 'https://slack.com/team_id'?: string } | undefined;
-      if (slackProfile?.['https://slack.com/team_id']) {
-        token.slackTeamId = slackProfile['https://slack.com/team_id'];
-      }
-      return token;
+export function getAuthConfig(): NextAuthConfig {
+  return {
+    trustHost: true,
+    secret: resolveAuthSecret(),
+    providers: buildProviders(),
+    session: { strategy: 'jwt' },
+    callbacks: {
+      async jwt({ token, profile }) {
+        const slackProfile = profile as { 'https://slack.com/team_id'?: string } | undefined;
+        if (slackProfile?.['https://slack.com/team_id']) {
+          token.slackTeamId = slackProfile['https://slack.com/team_id'];
+        }
+        return token;
+      },
+      async session({ session, token }) {
+        if (token.slackTeamId) {
+          (session as { slackTeamId?: string }).slackTeamId = token.slackTeamId as string;
+        }
+        return session;
+      },
     },
-    async session({ session, token }) {
-      if (token.slackTeamId) {
-        (session as { slackTeamId?: string }).slackTeamId = token.slackTeamId as string;
-      }
-      return session;
+    pages: {
+      signIn: '/signup',
     },
-  },
-  pages: {
-    signIn: '/signup',
-  },
-} satisfies NextAuthConfig;
+  };
+}
+
+/** @deprecated Use getAuthConfig() — kept for type imports */
+export const authConfig = getAuthConfig();
