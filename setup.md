@@ -310,7 +310,7 @@ AUTH_URL="http://localhost:3000"   # same as APP_BASE_URL in production
 2. Create **OAuth 2.0 Client ID** → Web application.
 3. Authorized redirect URI:
    - Local: `http://localhost:3000/api/auth/callback/google`
-   - Prod: `https://creator.tmi.production/api/auth/callback/google`
+   - Prod: `https://slackbrain.vercel.app/api/auth/callback/google`
 4. Copy into `.env`:
 
 ```
@@ -377,7 +377,7 @@ This project uses **five services** in production. You do **not** put everything
 | **PostgreSQL** (users, packs, audit) | **Neon** | Yes | Managed Postgres + `pgvector` |
 | **Redis** (job queue, pub/sub) | **Upstash** | Yes | Shared queue between Vercel and Render |
 | **Ollama** (local AI) | Your VPS / tunnel | If no cloud LLM | Worker calls it over HTTP; not hosted on Vercel/Render |
-| **Custom domain DNS** | Google Cloud DNS (or registrar) | If custom domain | Points `creator.tmi.production` → Vercel |
+| **Custom domain** | Vercel Domains + DNS | No | Optional — `https://slackbrain.vercel.app` is enough for the demo |
 
 ### Do you need Render?
 
@@ -393,11 +393,10 @@ Render runs `apps/worker`, which pulls jobs from Upstash and writes results to N
 If your `.env` has Neon `DATABASE_URL`, `DIRECT_URL`, and Upstash `REDIS_URL`, you are set for
 database and queue. You still need:
 
-1. **Vercel** — deploy web app + import env vars
+1. **Vercel** — deploy web app + import env vars (`https://slackbrain.vercel.app`)
 2. **Render** — deploy worker with the **same** env vars
-3. **Slack app** — point all Request URLs to your Vercel domain
-4. **Domain** — add `creator.tmi.production` in Vercel + Google DNS
-5. **Secrets** — `AUTH_SECRET`, `GOOGLE_CLIENT_*`, `SLACK_USER_TOKEN`, AI config
+3. **Slack app** — point all Request URLs to your Vercel URL
+4. **Secrets** — `AUTH_SECRET`, `GOOGLE_CLIENT_*`, `SLACK_USER_TOKEN`, AI config
 
 ### Production setup order (do in this sequence)
 
@@ -409,8 +408,9 @@ database and queue. You still need:
 5. Slack    → point all 4 Request URLs at Vercel (§10.3)
 6. AI       → Ollama host reachable from Render OR cloud LLM keys
 7. Smoke    → /api/health, /contextpack in Slack channel
-8. (Optional) Custom domain → creator.tmi.production + Google DNS
 ```
+
+No custom domain needed — use `https://slackbrain.vercel.app` everywhere (`APP_BASE_URL`, `AUTH_URL`, Slack URLs, Google OAuth redirect).
 
 ```bash
 # Generate Vercel import file from your local .env
@@ -437,7 +437,7 @@ npm run smoke:prod   # pre-flight check before deploy
 | Interactivity | `https://slackbrain.vercel.app/api/slack/interactions` |
 | Event subscriptions | `https://slackbrain.vercel.app/api/slack/events` |
 
-If you add a custom domain later (e.g. `creator.tmi.production`), replace `slackbrain.vercel.app`
+If you add a custom domain later, replace `slackbrain.vercel.app`
 in all four URLs and in `APP_BASE_URL` / `AUTH_URL`.
 
 **Import env to Vercel:** run `npm run env:vercel` → upload `.env.vercel` in Vercel → Environment Variables → Import .env (file is gitignored; never commit it).
@@ -521,13 +521,16 @@ You already have Neon URLs in `.env`. For production:
 
 Migrations run automatically on Render deploy (`preDeployCommand` in `render.yaml`).
 
-### 8.5 Custom domain (Google Cloud DNS → Vercel)
+### 8.5 Custom domain (optional — skip for hackathon)
 
-1. Vercel → Project → **Settings** → **Domains** → add `creator.tmi.production`
-2. Copy DNS records Vercel shows (TXT + A or CNAME)
-3. Google Cloud Console → **Cloud DNS** → your zone → add those records
-4. Wait for verification in Vercel
-5. Update `APP_BASE_URL` and `AUTH_URL` to `https://creator.tmi.production`
+The default Vercel URL (`https://slackbrain.vercel.app`) is enough. You do **not** need to buy a domain.
+
+If you add one later:
+
+1. Vercel → Project → **Settings** → **Domains** → add your domain
+2. Copy DNS records Vercel shows (TXT + A or CNAME) into your DNS provider
+3. Wait for verification in Vercel
+4. Update `APP_BASE_URL`, `AUTH_URL`, Slack Request URLs, and Google OAuth redirect to the new domain
 
 ### 8.6 Post-deploy checklist
 
