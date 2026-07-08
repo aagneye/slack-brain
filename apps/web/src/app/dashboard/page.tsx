@@ -31,7 +31,7 @@ export default function DashboardPage() {
           <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
             Better coverage = higher confidence.
           </p>
-          <Link href="/connectors" className="btn-ghost mt-3 w-full">
+          <Link href="/brain/connectors" className="btn-ghost mt-3 w-full">
             Manage connectors
           </Link>
         </div>
