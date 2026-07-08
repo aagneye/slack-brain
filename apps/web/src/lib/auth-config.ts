@@ -28,7 +28,15 @@ function buildProviders() {
   const slackId = envVar('SLACK_CLIENT_ID');
   const slackSecret = envVar('SLACK_CLIENT_SECRET');
   if (slackId && slackSecret) {
-    providers.push(Slack({ clientId: slackId, clientSecret: slackSecret }));
+    // Auth.js v5 + Slack OIDC: nonce must be listed in checks or callback fails
+    // with "unexpected ID Token nonce claim value" (surfaced as Configuration error).
+    providers.push(
+      Slack({
+        clientId: slackId,
+        clientSecret: slackSecret,
+        checks: ['pkce', 'nonce'],
+      }),
+    );
   }
 
   return providers;
@@ -39,6 +47,7 @@ export function getAuthConfig(): NextAuthConfig {
     trustHost: true,
     secret: resolveAuthSecret(),
     providers: buildProviders(),
+    debug: process.env.NODE_ENV === 'development',
     session: { strategy: 'jwt' },
     callbacks: {
       async jwt({ token, profile }) {
@@ -60,6 +69,3 @@ export function getAuthConfig(): NextAuthConfig {
     },
   };
 }
-
-/** @deprecated Use getAuthConfig() — kept for type imports */
-export const authConfig = getAuthConfig();
