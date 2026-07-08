@@ -24,7 +24,7 @@ sequenceDiagram
     participant LG as LLM Gateway
     participant M as LLM (Claude/GPT)
 
-    U->>S: /contextpack "Checkout API failing"
+    U->>S: /slackbrain "Checkout API failing"
     S->>API: signed command
     API->>API: verify sig, resolve user/workspace
     API->>Q: enqueue context_job

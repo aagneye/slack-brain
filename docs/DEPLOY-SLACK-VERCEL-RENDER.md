@@ -170,13 +170,13 @@ Copy these URLs exactly:
 | Slack setting | Location in Slack app | Request URL |
 |---|---|---|
 | **OAuth redirect** | OAuth & Permissions → Redirect URLs | `https://creator.tmi.production/api/auth/callback/slack` |
-| **Slash command** | Slash Commands → `/contextpack` → Request URL | `https://creator.tmi.production/api/slack/commands` |
+| **Slash command** | Slash Commands → `/slackbrain` → Request URL | `https://creator.tmi.production/api/slack/commands` |
 | **Interactivity** | Interactivity & Shortcuts → Request URL | `https://creator.tmi.production/api/slack/interactions` |
 | **Event subscriptions** | Event Subscriptions → Request URL | `https://creator.tmi.production/api/slack/events` |
 
 ### Slash command details
 
-- **Command:** `/contextpack`
+- **Command:** `/slackbrain`
 - **Short description:** Build a verified Context Pack for a task
 - **Usage hint:** `[what you want to investigate]`
 
@@ -199,7 +199,7 @@ Copy these URLs exactly:
 Use a **channel**, not a DM with the app.
 
 ```
-/contextpack summarize recent deploy issues
+/slackbrain summarize recent deploy issues
 ```
 
 Expected flow:
@@ -209,7 +209,7 @@ Expected flow:
 3. Bot posts a **Context Pack card** in the channel
 4. Click **Ollama** or **View full Pack**
 
-If `/contextpack` is missing:
+If `/slackbrain` is missing:
 
 - App not installed to workspace
 - Slash command Request URL wrong or Vercel deploy failed

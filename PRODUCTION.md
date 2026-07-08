@@ -122,7 +122,7 @@ Re-install the app to your workspace after changing URLs.
 1. Open `https://your-app.vercel.app` → Sign in with Slack
 2. Connectors → confirm GitHub token works
 3. Dashboard → start a Context Pack job → watch `/jobs/[id]` progress
-4. In Slack: `/contextpack test task` → progress → Pack card
+4. In Slack: `/slackbrain test task` → progress → Pack card
 5. Click **Send to Claude/GPT** → answer in thread
 6. Check `/audit` for the logged send
 

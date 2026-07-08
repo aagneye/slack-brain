@@ -62,7 +62,7 @@ The architecture above is intentionally designed so the narrow MVP and the full 
 
 ## Demo narrative (the 90-second story that wins)
 
-1. In Slack: `/contextpack Investigate why Checkout API is failing`.
+1. In Slack: `/slackbrain Investigate why Checkout API is failing`.
 2. Bot: *"🧠 Building Context Pack…"* — progress streams: *Slack 12, GitHub 4 … removed 5 duplicates
    … 1 gap found … Confidence 62%.*
 3. Pack card appears: top PRs/threads with citations, a **duplicate collapsed** ("seen in 4 places"),

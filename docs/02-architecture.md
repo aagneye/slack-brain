@@ -270,7 +270,7 @@ CREATE INDEX ON audit_event (job_id);
 ```mermaid
 flowchart LR
   subgraph Slack
-    U[Engineer] -->|/contextpack| SA[Slack Agent App]
+    U[Engineer] -->|/slackbrain| SA[Slack Agent App]
   end
 
   SA -->|HTTP events| API[Next.js API / Gateway]
@@ -415,7 +415,7 @@ All endpoints are workspace-scoped and permission-checked.
 | Method | Path | Purpose |
 |---|---|---|
 | POST | `/api/slack/events` | Slack Events API (URL verification, mentions). Verifies signature. |
-| POST | `/api/slack/commands` | Slash command `/contextpack <task>`; acks < 3s, enqueues job. |
+| POST | `/api/slack/commands` | Slash command `/slackbrain <task>`; acks < 3s, enqueues job. |
 | POST | `/api/slack/interactions` | Block Kit button actions (Send to AI, trim, view). |
 
 ### 11.2 Core REST

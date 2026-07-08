@@ -120,7 +120,7 @@ Format: *As a `<role>`, I want `<capability>` so that `<benefit>`.* Each has acc
 ### Epic A — Build a Context Pack from Slack
 - **A1** As an engineer, I want to trigger a Context Pack with a natural-language task in Slack so
   that I don't have to gather context by hand.
-  - AC: `/contextpack <task>` (or @-mention) starts a job; bot replies within 2s with a progress
+  - AC: `/slackbrain <task>` (or @-mention) starts a job; bot replies within 2s with a progress
     message and a job id.
 - **A2** As an engineer, I want to see live progress (which sources, how many hits) so that I trust
   the engine is working and know what's covered.

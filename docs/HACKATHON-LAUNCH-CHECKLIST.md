@@ -12,7 +12,7 @@ By the end, you should have:
 - Slack app webhooks connected to that URL
 - Worker running in Render
 - Neon + Upstash connected
-- One demo command working in Slack: `/contextpack ...`
+- One demo command working in Slack: `/slackbrain ...`
 
 ---
 
@@ -152,7 +152,7 @@ Use this sequence in front of judges:
 
 1. Open your live URL and show dashboard.
 2. In Slack channel, run:
-   - `/contextpack summarize current project readiness and blockers`
+   - `/slackbrain summarize current project readiness and blockers`
 3. Show progress + generated Context Pack card.
 4. Click "View full Pack".
 5. Click "Send to AI" (Ollama or configured provider).
@@ -165,7 +165,7 @@ Use this sequence in front of judges:
 Share this in one message:
 
 - Live URL: `https://creator.tmi.production`
-- Slack command: `/contextpack <question>`
+- Slack command: `/slackbrain <question>`
 - 2-3 sample prompts judges can try
 - Optional: short 60-second walkthrough video/GIF
 
@@ -187,7 +187,7 @@ Share this in one message:
 - [ ] Vercel health endpoint returns OK
 - [ ] Custom domain is valid in Vercel (DNS verified via Google)
 - [ ] Render worker healthy
-- [ ] Slack `/contextpack` works in a channel
+- [ ] Slack `/slackbrain` works in a channel
 - [ ] Pack page loads from live URL
 - [ ] Send-to-AI works
 - [ ] One clean demo script ready

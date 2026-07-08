@@ -10,7 +10,7 @@
 
 ### 12.1 Trigger & acknowledgement
 Built on the **Slack Agent / Bolt SDK**. The user triggers via slash command
-`/contextpack Investigate why Checkout API is failing`, an @-mention, or a message action.
+`/slackbrain Investigate why Checkout API is failing`, an @-mention, or a message action.
 Slack requires an ack within 3s, so the handler:
 1. Verifies the Slack request signature.
 2. Resolves workspace + user (creating rows if first-seen).
@@ -59,7 +59,7 @@ sequenceDiagram
     participant W as Worker
     participant P as Postgres
 
-    U->>S: /contextpack "Checkout API failing"
+    U->>S: /slackbrain "Checkout API failing"
     S->>A: command (signed)
     A->>A: verify signature, resolve user
     A->>Q: enqueue context_job
