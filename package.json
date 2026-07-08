@@ -24,6 +24,7 @@
     "env:vercel": "node scripts/export-vercel-env.mjs",
     "env:render": "node scripts/export-render-env.mjs",
     "smoke:prod": "node scripts/smoke-check.mjs",
+    "check:auth": "node scripts/check-auth-env.mjs",
     "build:render": "npm run db:generate -w @cpe/db && npm run build -w @cpe/worker"
   },
   "devDependencies": {
