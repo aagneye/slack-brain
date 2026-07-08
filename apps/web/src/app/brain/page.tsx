@@ -1,6 +1,6 @@
 import Link from 'next/link';
 import { auth } from '@/auth';
-import { getSessionUser } from '@/lib/session-user';
+import { getSessionUser } from '@/lib/auth-session';
 
 export default async function BrainCoverPage() {
   const session = await auth();
