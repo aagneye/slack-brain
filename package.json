@@ -25,6 +25,8 @@
     "env:render": "node scripts/export-render-env.mjs",
     "smoke:prod": "node scripts/smoke-check.mjs",
     "check:auth": "node scripts/check-auth-env.mjs",
+    "check:local-auth": "node scripts/check-local-auth.mjs",
+    "check:local-auth:live": "node scripts/check-local-auth.mjs --live",
     "build:render": "npm run db:generate -w @cpe/db && npm run build -w @cpe/worker"
   },
   "devDependencies": {
