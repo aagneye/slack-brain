@@ -33,25 +33,42 @@ function SlackIcon() {
   );
 }
 
-export function SignInButtons({ callbackUrl = '/brain' }: { callbackUrl?: string }) {
+export function SignInButtons({
+  callbackUrl = '/brain',
+  showGoogle = true,
+  showSlack = true,
+}: {
+  callbackUrl?: string;
+  showGoogle?: boolean;
+  showSlack?: boolean;
+}) {
   return (
     <div className="space-y-3">
-      <button
-        type="button"
-        onClick={() => signIn('google', { callbackUrl })}
-        className="btn-google"
-      >
-        <GoogleIcon />
-        Continue with Google
-      </button>
-      <button
-        type="button"
-        onClick={() => signIn('slack', { callbackUrl })}
-        className="btn-slack"
-      >
-        <SlackIcon />
-        Continue with Slack
-      </button>
+      {showGoogle && (
+        <button
+          type="button"
+          onClick={() => signIn('google', { callbackUrl })}
+          className="btn-google"
+        >
+          <GoogleIcon />
+          Continue with Google
+        </button>
+      )}
+      {showSlack && (
+        <button
+          type="button"
+          onClick={() => signIn('slack', { callbackUrl })}
+          className="btn-slack"
+        >
+          <SlackIcon />
+          Continue with Slack
+        </button>
+      )}
+      {!showGoogle && !showSlack && (
+        <p className="text-center text-sm text-red-600">
+          No sign-in providers configured. Set GOOGLE_CLIENT_* or SLACK_CLIENT_* in .env.
+        </p>
+      )}
     </div>
   );
 }
