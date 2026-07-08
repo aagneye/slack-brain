@@ -39,9 +39,9 @@ export default async function BrainProfilePage() {
       </div>
 
       <div className="mt-6 grid gap-4 sm:grid-cols-2">
-        <Link href="/connectors" className="card hover:shadow-soft">
-          <h3 className="font-semibold text-slate-900">Connectors</h3>
-          <p className="mt-1 text-sm text-slate-600">Slack search, GitHub, and more</p>
+        <Link href="/brain/connectors" className="card hover:shadow-soft">
+          <h3 className="font-semibold text-slate-900">Connections</h3>
+          <p className="mt-1 text-sm text-slate-600">Slack workspace, search, and bot status</p>
         </Link>
         <Link href="/audit" className="card hover:shadow-soft">
           <h3 className="font-semibold text-slate-900">Audit log</h3>
