@@ -670,6 +670,7 @@ Requires `AUTH_SECRET` on Vercel. Google OAuth needs redirect URI:
 | Pack card but empty retrieval | Add `SLACK_USER_TOKEN` or connect Slack Search in portal |
 | Send to AI fails | `OLLAMA_BASE_URL` must be reachable from Render (use VPS/tunnel, not localhost) |
 | `DATABASE_URL missing pgbouncer=true` | Add `&pgbouncer=true` to Neon pooled URL on Render |
+| Slack OAuth: `redirect_uri did not match` | Add `https://slackbrain.vercel.app/api/auth/callback/slack` (and local `http://localhost:3000/api/auth/callback/slack`) under **OAuth & Permissions → Redirect URLs**, then **Save URLs** |
 
 ---
 
