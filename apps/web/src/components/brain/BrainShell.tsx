@@ -9,14 +9,14 @@ export function BrainShell({
   userName?: string | null;
 }) {
   return (
-    <div className="flex min-h-screen bg-slate-50">
+    <div className="premium-shell flex min-h-screen">
       <BrainNav userName={userName} />
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center justify-between border-b border-slate-200 bg-white px-8 py-4">
-          <p className="text-sm text-slate-500">Slack Brain workspace</p>
+        <header className="premium-glass sticky top-0 z-20 mx-6 mt-4 flex items-center justify-between rounded-2xl px-6 py-4">
+          <p className="text-sm font-medium text-slate-600">Slack Brain workspace</p>
           <SignOutButton />
         </header>
-        <main className="flex-1 p-8">{children}</main>
+        <main className="flex-1 px-6 pb-8 pt-6">{children}</main>
       </div>
     </div>
   );
