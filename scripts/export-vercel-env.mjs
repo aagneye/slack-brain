@@ -69,7 +69,7 @@ if (!vars.get('AUTH_SECRET')?.trim()) {
 if (!vars.get('OPENAI_API_KEY')?.trim() && !vars.get('ANTHROPIC_API_KEY')?.trim()) {
   if (!vars.get('OLLAMA_ENABLED')) vars.set('OLLAMA_ENABLED', 'true');
   if (!vars.get('OLLAMA_BASE_URL')) vars.set('OLLAMA_BASE_URL', 'http://localhost:11434');
-  if (!vars.get('OLLAMA_CHAT_MODEL')) vars.set('OLLAMA_CHAT_MODEL', 'llama3.2');
+  if (!vars.get('OLLAMA_CHAT_MODEL')) vars.set('OLLAMA_CHAT_MODEL', 'qwen2.5-coder:7b');
   if (!vars.get('OLLAMA_EMBED_MODEL')) vars.set('OLLAMA_EMBED_MODEL', 'nomic-embed-text');
   if (!vars.get('EMBEDDINGS_PROVIDER')) vars.set('EMBEDDINGS_PROVIDER', 'ollama');
 }
