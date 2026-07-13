@@ -99,6 +99,11 @@ body {
   color: var(--land-ink, #1a1a17);
 }
 
+.landing-page ::selection {
+  background: color-mix(in srgb, var(--land-forest) 22%, white);
+  color: var(--land-ink);
+}
+
 .landing-eyebrow {
   @apply font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-land-muted;
 }
