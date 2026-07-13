@@ -51,7 +51,7 @@ export async function buildPipelineDepsForJob(
 
   if (isOllamaEnabled()) {
     logger.info(
-      { jobId: job.jobId, model: process.env.OLLAMA_CHAT_MODEL ?? 'llama3.2' },
+      { jobId: job.jobId, model: process.env.OLLAMA_CHAT_MODEL ?? 'qwen2.5-coder:7b' },
       'pipeline using Ollama for compression',
     );
   }

@@ -21,10 +21,10 @@ export class OllamaProvider implements LLMPort {
       /\/$/,
       '',
     );
-    this.defaultModel = opts.defaultModel ?? process.env.OLLAMA_CHAT_MODEL ?? 'llama3.2';
+    this.defaultModel = opts.defaultModel ?? process.env.OLLAMA_CHAT_MODEL ?? 'qwen2.5-coder:7b';
   }
 
-  /** Maps gateway model ids (`ollama`, `ollama:llama3.2`) to an Ollama model name. */
+  /** Maps gateway model ids (`ollama`, `ollama:qwen2.5-coder:7b`) to an Ollama model name. */
   resolveModel(model: string): string {
     if (model === 'ollama') return this.defaultModel;
     if (model.startsWith('ollama:')) return model.slice('ollama:'.length);
