@@ -1,16 +1,12 @@
 import Link from 'next/link';
+import { LandingMark } from './LandingMark';
 
 export function LandingNav({ authed }: { authed: boolean }) {
   return (
     <header className="sticky top-0 z-50 bg-land-cream/90 backdrop-blur-md">
       <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-5">
         <Link href="/" className="flex items-center gap-2.5 font-semibold text-land-forest">
-          <span
-            className="flex h-8 w-8 items-center justify-center rounded-lg bg-land-forest text-sm text-white"
-            aria-hidden
-          >
-            🧠
-          </span>
+          <LandingMark />
           <span className="text-[15px] tracking-tight">Slack Brain</span>
         </Link>
 
