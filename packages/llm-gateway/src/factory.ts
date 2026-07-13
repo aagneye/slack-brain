@@ -35,7 +35,7 @@ export function ollamaBaseUrl(processEnv: NodeJS.ProcessEnv = process.env): stri
 }
 
 export function ollamaChatModel(processEnv: NodeJS.ProcessEnv = process.env): string {
-  return processEnv.OLLAMA_CHAT_MODEL ?? 'llama3.2';
+  return processEnv.OLLAMA_CHAT_MODEL ?? 'qwen2.5-coder:7b';
 }
 
 /** Model id passed to LLMPort.complete during pipeline compression. */
