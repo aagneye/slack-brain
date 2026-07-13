@@ -84,3 +84,46 @@ body {
 .section-sub {
   @apply mt-3 max-w-2xl text-lg text-slate-600;
 }
+
+/* ── Landing page (cream / forest design system) ─────────────────────────── */
+
+.landing-page {
+  background: var(--land-cream, #f6f5f1);
+  color: var(--land-ink, #1a1a17);
+}
+
+.landing-eyebrow {
+  @apply font-mono text-[11px] font-medium uppercase tracking-[0.18em] text-land-muted;
+}
+
+.landing-h2 {
+  @apply font-sans text-3xl font-bold tracking-tight text-land-ink sm:text-4xl;
+}
+
+.landing-body {
+  @apply text-base leading-relaxed text-land-muted;
+}
+
+.landing-pill {
+  @apply inline-flex items-center justify-center rounded-full px-6 py-3 text-sm font-semibold transition;
+}
+
+.landing-pill-primary {
+  @apply landing-pill bg-land-forest text-white hover:bg-[#163024];
+}
+
+.landing-pill-secondary {
+  @apply landing-pill border border-land-line bg-white text-land-ink hover:bg-land-cream;
+}
+
+.landing-pill-light {
+  @apply landing-pill bg-land-cream text-land-forest hover:bg-white;
+}
+
+.landing-card {
+  @apply rounded-2xl border border-land-line/80 bg-white p-5 shadow-[0_1px_2px_rgba(26,26,23,0.04)];
+}
+
+.landing-mono-label {
+  @apply font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-land-muted;
+}
