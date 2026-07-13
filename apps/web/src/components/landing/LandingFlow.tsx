@@ -1,3 +1,5 @@
+import { LandingMark } from './LandingMark';
+
 type FlowCard = {
   id: string;
   kind: string;
@@ -121,9 +123,7 @@ export function LandingFlow() {
           <div className="relative flex flex-col items-center py-6 lg:py-0">
             <div className="hidden h-px w-16 bg-land-line lg:block" aria-hidden />
             <div className="flex h-20 w-20 flex-col items-center justify-center rounded-2xl border border-land-line bg-white shadow-soft">
-              <span className="text-2xl" aria-hidden>
-                🧠
-              </span>
+              <LandingMark className="h-9 w-9 text-base" />
               <span className="mt-1 text-[11px] font-semibold text-land-ink">Slack Brain</span>
             </div>
             <div className="hidden h-px w-16 bg-land-line lg:block" aria-hidden />
