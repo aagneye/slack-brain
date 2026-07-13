@@ -261,7 +261,7 @@ machine — cloud hosts cannot reach it without a tunnel.
 2. Pull models used by the pipeline:
 
    ```bash
-   ollama pull llama3.2
+   ollama pull qwen2.5-coder:7b
    ollama pull nomic-embed-text
    ```
 
@@ -279,7 +279,7 @@ machine — cloud hosts cannot reach it without a tunnel.
    ```
    OLLAMA_ENABLED=true
    OLLAMA_BASE_URL=http://localhost:11434
-   OLLAMA_CHAT_MODEL=llama3.2
+   OLLAMA_CHAT_MODEL=qwen2.5-coder:7b
    OLLAMA_EMBED_MODEL=nomic-embed-text
    EMBEDDINGS_PROVIDER=ollama
    ```
@@ -293,65 +293,80 @@ machine — cloud hosts cannot reach it without a tunnel.
    curl http://127.0.0.1:11434/api/tags
    ```
 
-#### A.2 Production demo — local Ollama + ngrok (no OpenAI credits)
+#### A.2 Production demo — local Ollama (Qwen) + tunnel (no OpenAI credits)
 
 Use this when **Vercel + Render are deployed** but you want **free local models** for the hackathon
-demo. Your PC must stay on with Ollama and ngrok running during the demo.
+demo. Your PC must stay on with **Ollama + a public tunnel** running during the demo.
+
+**Slack note:** you do **not** change Slash Command URLs for the LLM. `/slackbrain` still hits Vercel.
+The **Render worker** (and Send-to-AI on Vercel) call Ollama through `OLLAMA_BASE_URL`.
 
 **Prerequisites**
 
 | Tool | Purpose |
 |---|---|
-| Ollama (running) | `llama3.2` + `nomic-embed-text` pulled |
-| ngrok | Exposes `localhost:11434` to the internet |
+| Ollama (running) | Chat: `qwen2.5-coder:7b` · Embed: `nomic-embed-text` |
+| Tunnel | Exposes `localhost:11434` — **Cloudflare Tunnel** (no account) or **ngrok** |
 
-**Step 1 — Confirm Ollama**
+**Step 1 — Confirm Ollama + Qwen**
 
 ```powershell
 curl http://127.0.0.1:11434/api/tags
 ```
 
-You should see `llama3.2` and `nomic-embed-text` in the JSON. Do **not** run `ollama serve` if port
-11434 is already in use.
-
-**Step 2 — Install ngrok (Windows)**
-
-1. Download from https://ngrok.com/download (Windows AMD64).
-2. Unzip `ngrok.exe` (e.g. `C:\Tools\ngrok\`).
-3. Sign up at ngrok.com → copy your authtoken.
-4. Configure:
-
-   ```powershell
-   cd C:\Tools\ngrok
-   .\ngrok config add-authtoken YOUR_TOKEN_HERE
-   ```
-
-   Or install via winget: `winget install ngrok.ngrok`
-
-**Step 3 — Start the tunnel**
-
-Open a **separate terminal** and leave it open for the whole demo:
+You should see `qwen2.5-coder:7b` (or `qwen2.5:14b-instruct-q4_K_M`) and `nomic-embed-text`.
+If Qwen is missing:
 
 ```powershell
-ngrok http 11434
+ollama pull qwen2.5-coder:7b
+ollama pull nomic-embed-text
 ```
 
-Copy the **HTTPS** forwarding URL, e.g. `https://abc123.ngrok-free.app` (no trailing slash).
+Do **not** run `ollama serve` if port 11434 is already in use.
 
-Test from any machine:
+**Step 2 — Start a public tunnel (pick one)**
+
+**Option A — Cloudflare Tunnel (no signup, recommended for quick demo)**
+
+Ollama rejects unknown `Host` headers — always pass `--http-host-header`:
 
 ```powershell
-curl https://abc123.ngrok-free.app/api/tags
+C:\Tools\cloudflared\cloudflared.exe tunnel --url http://127.0.0.1:11434 --http-host-header "localhost:11434"
 ```
 
-**Step 4 — Set env on Vercel AND Render**
+Copy the `https://….trycloudflare.com` URL from the banner.
+
+**Option B — ngrok (needs free account + authtoken)**
+
+```powershell
+C:\Tools\ngrok\ngrok.exe config add-authtoken YOUR_TOKEN_HERE
+C:\Tools\ngrok\ngrok.exe http 11434
+```
+
+Copy the `https://….ngrok-free.app` URL.
+
+Leave the tunnel terminal **open** for the whole demo.
+
+Test:
+
+```powershell
+curl https://YOUR-TUNNEL-URL/api/tags
+```
+
+Print paste-ready env vars:
+
+```bash
+node scripts/print-ollama-tunnel-env.mjs https://YOUR-TUNNEL-URL
+```
+
+**Step 3 — Set env on Vercel AND Render**
 
 Add or update **Production** environment variables on **both** hosts:
 
 ```
 OLLAMA_ENABLED=true
-OLLAMA_BASE_URL=https://abc123.ngrok-free.app
-OLLAMA_CHAT_MODEL=llama3.2
+OLLAMA_BASE_URL=https://YOUR-TUNNEL-URL
+OLLAMA_CHAT_MODEL=qwen2.5-coder:7b
 OLLAMA_EMBED_MODEL=nomic-embed-text
 EMBEDDINGS_PROVIDER=ollama
 ```
@@ -359,39 +374,39 @@ EMBEDDINGS_PROVIDER=ollama
 - **Delete or leave empty:** `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`
 - Redeploy **Vercel** (web) and **Render** (worker) after saving.
 
-> ngrok free URLs change every time you restart ngrok. Update `OLLAMA_BASE_URL` and redeploy when
+> Tunnel URLs change when you restart Cloudflare/ngrok. Update `OLLAMA_BASE_URL` and redeploy when
 > the URL changes.
 
-**Step 5 — Verify production**
+**Step 4 — Verify production**
 
 ```bash
 curl https://slackbrain.vercel.app/api/health
 ```
 
-Expect `"ollama": "ok"` (not `"error"`). `"status"` may be `"degraded"` only if something else fails;
-what matters for AI is `checks.ollama === "ok"`.
+Expect `"ollama": "ok"` (not `"error"`).
 
-**Step 6 — Demo in Slack**
+**Step 5 — Demo in Slack**
 
 ```
 /slackbrain what should we know before our next deploy?
 ```
 
-Watch for progress updates and a Pack card. **Send to AI** uses the same Ollama tunnel.
+Watch for progress updates and a Pack card. **Send to AI** uses the same Qwen tunnel.
 
 **During the demo, keep running:**
 
 1. Ollama (Windows background service)
-2. `ngrok http 11434` terminal
+2. Tunnel terminal (`cloudflared` or `ngrok`)
 
 **Common issues**
 
 | Symptom | Fix |
 |---|---|
 | `ollama serve` → port already in use | Ollama is already running — use `curl http://127.0.0.1:11434/api/tags` |
-| `ngrok` not recognized | Install ngrok (§A.2 Step 2); use full path `.\ngrok.exe` |
-| `/api/health` → `"ollama": "error"` | Wrong `OLLAMA_BASE_URL`, ngrok stopped, or forgot to redeploy Render |
+| `ngrok` ERROR missing authtoken | Use Cloudflare Tunnel (§A.2 Option A) or add an ngrok authtoken |
+| `/api/health` → `"ollama": "error"` | Wrong `OLLAMA_BASE_URL`, tunnel stopped, or forgot to redeploy Render |
 | Pack builds but Send to AI fails | Set `OLLAMA_*` on **Vercel** too (not only Render) |
+| Model not found | `ollama pull qwen2.5-coder:7b` then retry |
 | Job ack but no Pack card | Check Render logs + `curl https://slack-brain.onrender.com/health` |
 
 #### A.3 Production — Ollama on a VPS (no ngrok)
@@ -401,7 +416,7 @@ For a stable URL (no tunnel on your laptop), run Ollama on a VPS or always-on ho
 ```
 OLLAMA_ENABLED=true
 OLLAMA_BASE_URL=https://your-ollama-host:11434
-OLLAMA_CHAT_MODEL=llama3.2
+OLLAMA_CHAT_MODEL=qwen2.5-coder:7b
 OLLAMA_EMBED_MODEL=nomic-embed-text
 EMBEDDINGS_PROVIDER=ollama
 ```
@@ -476,7 +491,7 @@ Once `npm run dev` is running and Slack Request URLs point at your ngrok URL:
 2. The bot posts a **progress message**, then a **Context Pack card** when the worker finishes.
 3. On the card:
    - **View full Pack** — opens the web portal (`/p/<slug>`).
-   - **Ollama (llama3.2)** — sends the Pack to your Ollama model and posts the answer in-thread.
+   - **Ollama (qwen2.5-coder:7b)** — sends the Pack to your Ollama model and posts the answer in-thread.
    - **Open in Cursor** — handoff link for IDE workflows.
 4. Retrieval uses your **user search token** (`SLACK_USER_TOKEN` or Connectors → Slack Search).
    The bot token only posts messages.
@@ -612,7 +627,7 @@ The worker is a long-running BullMQ consumer — not suitable for Vercel serverl
 | `GITHUB_TOKEN` | Optional — GitHub retrieval |
 | `OLLAMA_ENABLED` | `true` if using Ollama |
 | `OLLAMA_BASE_URL` | Remote host reachable from Render (not `localhost`) |
-| `OLLAMA_CHAT_MODEL` | `llama3.2` |
+| `OLLAMA_CHAT_MODEL` | `qwen2.5-coder:7b` |
 | `OLLAMA_EMBED_MODEL` | `nomic-embed-text` |
 | `EMBEDDINGS_PROVIDER` | `ollama` or `openai` |
 | `WORKER_CONCURRENCY` | Optional (default `4`) |
