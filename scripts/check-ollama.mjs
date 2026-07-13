@@ -34,7 +34,7 @@ if (!enabled) {
 }
 
 const base = (env.OLLAMA_BASE_URL ?? 'http://localhost:11434').replace(/\/$/, '');
-const chatModel = env.OLLAMA_CHAT_MODEL ?? 'llama3.2';
+const chatModel = env.OLLAMA_CHAT_MODEL ?? 'qwen2.5-coder:7b';
 const embedModel = env.OLLAMA_EMBED_MODEL ?? 'nomic-embed-text';
 
 console.log('Base URL:', base);
