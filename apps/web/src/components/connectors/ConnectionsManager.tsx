@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useEffect, useState } from 'react';
-import { signIn } from 'next-auth/react';
+import { signIn, useSession } from 'next-auth/react';
 import type { SlackConnectionStatus } from '@/lib/connector-status';
 import { ConnectionStatusBadge } from './ConnectionStatusBadge';
 
@@ -14,11 +14,14 @@ function SlackMark() {
 }
 
 export function ConnectionsManager({ initial }: { initial: SlackConnectionStatus }) {
+  const { update } = useSession();
   const [status, setStatus] = useState(initial);
   const [searchToken, setSearchToken] = useState('');
   const [searchBusy, setSearchBusy] = useState(false);
+  const [workspaceBusy, setWorkspaceBusy] = useState(false);
   const [searchMessage, setSearchMessage] = useState('');
   const [searchError, setSearchError] = useState(false);
+  const [workspaceMessage, setWorkspaceMessage] = useState('');
   const [lastChecked, setLastChecked] = useState(initial.checkedAt);
 
   const refresh = useCallback(async () => {
@@ -71,6 +74,24 @@ export function ConnectionsManager({ initial }: { initial: SlackConnectionStatus
     await refresh();
   }
 
+  async function disconnectWorkspace() {
+    setWorkspaceBusy(true);
+    setWorkspaceMessage('');
+    // Drop search token while workspace is still linked, then clear team id from session.
+    await fetch('/api/connectors/slack-search', { method: 'DELETE' }).catch(() => null);
+    await update({ disconnectSlack: true });
+    setStatus((prev) => ({
+      ...prev,
+      workspace: { connected: false, slackTeamId: null, name: null },
+      slackSearch: { connected: false },
+      checkedAt: new Date().toISOString(),
+    }));
+    setLastChecked(new Date().toISOString());
+    setWorkspaceMessage('Slack workspace disconnected.');
+    setWorkspaceBusy(false);
+    await refresh();
+  }
+
   const checkedLabel = new Date(lastChecked).toLocaleTimeString();
 
   return (
@@ -85,7 +106,6 @@ export function ConnectionsManager({ initial }: { initial: SlackConnectionStatus
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        {/* Workspace OAuth */}
         <article className="premium-card p-6">
           <div className="flex items-start justify-between gap-4">
             <div className="flex items-center gap-3">
@@ -135,18 +155,31 @@ export function ConnectionsManager({ initial }: { initial: SlackConnectionStatus
                 Connect Slack workspace
               </button>
             ) : (
-              <button
-                type="button"
-                className="btn-ghost rounded-2xl"
-                onClick={() => signIn('slack', { callbackUrl: '/brain/connectors' })}
-              >
-                Reconnect workspace
-              </button>
+              <>
+                <button
+                  type="button"
+                  className="btn-ghost rounded-2xl"
+                  onClick={() => signIn('slack', { callbackUrl: '/brain/connectors' })}
+                  disabled={workspaceBusy}
+                >
+                  Reconnect workspace
+                </button>
+                <button
+                  type="button"
+                  className="rounded-2xl border border-red-200 bg-red-50 px-4 py-2 text-sm font-medium text-red-700 transition hover:bg-red-100 disabled:opacity-50"
+                  onClick={disconnectWorkspace}
+                  disabled={workspaceBusy}
+                >
+                  {workspaceBusy ? 'Disconnecting…' : 'Disconnect'}
+                </button>
+              </>
             )}
           </div>
+          {workspaceMessage && (
+            <p className="mt-3 text-sm text-emerald-600">{workspaceMessage}</p>
+          )}
         </article>
 
-        {/* Slack search token */}
         <article className="premium-card p-6">
           <div className="flex items-start justify-between gap-4">
             <div>
@@ -215,7 +248,6 @@ export function ConnectionsManager({ initial }: { initial: SlackConnectionStatus
           )}
         </article>
 
-        {/* Bot — server configured */}
         <article className="premium-card p-6">
           <div className="flex items-start justify-between gap-4">
             <div>
