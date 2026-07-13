@@ -21,6 +21,7 @@
     "db:generate": "npm run db:generate -w @cpe/db",
     "check:redis": "node scripts/check-redis.mjs",
     "check:ollama": "node scripts/check-ollama.mjs",
+    "ollama:tunnel-env": "node scripts/print-ollama-tunnel-env.mjs",
     "env:vercel": "node scripts/export-vercel-env.mjs",
     "env:render": "node scripts/export-render-env.mjs",
     "smoke:prod": "node scripts/smoke-check.mjs",
