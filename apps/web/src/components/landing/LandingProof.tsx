@@ -1,26 +1,26 @@
 export function LandingProof() {
   return (
-    <section id="proof" className="bg-land-deep px-6 py-20 text-white">
+    <section id="proof" className="bg-gradient-to-br from-slate-900 via-indigo-950 to-violet-950 px-6 py-20 text-white">
       <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-2">
         <div>
-          <p className="landing-eyebrow text-white/45">Visibility &amp; proof</p>
+          <p className="landing-eyebrow text-indigo-200/70">Visibility &amp; proof</p>
           <h2 className="mt-3 font-sans text-3xl font-bold tracking-tight sm:text-4xl">
             Proof your team can read.
           </h2>
-          <p className="mt-4 text-base leading-relaxed text-white/60">
+          <p className="mt-4 text-base leading-relaxed text-indigo-100/70">
             Every pack is measured against what was actually retrieved — so you can show what
             changed, what was missing, and that the answer is still grounded.
           </p>
-          <p className="mt-3 text-base leading-relaxed text-white/60">
+          <p className="mt-3 text-base leading-relaxed text-indigo-100/70">
             Confidence scores, citations, and an audit trail of what the model saw — generated with
             the pack, not after the fact.
           </p>
         </div>
 
-        <div className="rounded-3xl border border-white/10 bg-white/[0.04] p-6 sm:p-8">
+        <div className="rounded-3xl border border-white/10 bg-white/[0.06] p-6 shadow-xl backdrop-blur-sm sm:p-8">
           <div className="flex items-start justify-between gap-4">
             <p className="landing-mono-label text-white/40">Verified vs noise · deploy pack</p>
-            <span className="font-mono text-sm font-semibold text-land-mint">+0.86 confidence</span>
+            <span className="font-mono text-sm font-semibold text-violet-300">+0.86 confidence</span>
           </div>
           <h3 className="mt-3 text-xl font-semibold text-white">Noise down, signal held.</h3>
 
@@ -28,8 +28,8 @@ export function LandingProof() {
             <svg viewBox="0 0 400 140" className="h-full w-full" preserveAspectRatio="none">
               <defs>
                 <linearGradient id="proofFill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#5EEAD4" stopOpacity="0.35" />
-                  <stop offset="100%" stopColor="#5EEAD4" stopOpacity="0" />
+                  <stop offset="0%" stopColor="#A78BFA" stopOpacity="0.4" />
+                  <stop offset="100%" stopColor="#A78BFA" stopOpacity="0" />
                 </linearGradient>
               </defs>
               <path
@@ -46,7 +46,7 @@ export function LandingProof() {
               <path
                 d="M0 95 C50 90, 90 70, 140 55 S220 25, 280 30 S350 45, 400 35"
                 fill="none"
-                stroke="#5EEAD4"
+                stroke="#A78BFA"
                 strokeWidth="2.5"
               />
             </svg>
@@ -58,7 +58,7 @@ export function LandingProof() {
               Raw channel noise
             </span>
             <span className="inline-flex items-center gap-2">
-              <span className="inline-block w-6 border-t-2 border-land-mint" />
+              <span className="inline-block w-6 border-t-2 border-violet-300" />
               Verified Context Pack
             </span>
           </div>
