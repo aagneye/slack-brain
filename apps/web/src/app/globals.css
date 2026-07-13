@@ -11,6 +11,13 @@
   --border: #e2e8f0;
   --accent: #4f46e5;
   --accent-soft: #eef2ff;
+  --land-cream: #f6f5f1;
+  --land-ink: #1a1a17;
+  --land-forest: #1e392a;
+  --land-deep: #121614;
+  --land-muted: #6b6b63;
+  --land-line: #e4e2da;
+  --land-mint: #5eead4;
 }
 
 body {
