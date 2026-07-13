@@ -2,20 +2,26 @@ import Link from 'next/link';
 
 export function LandingFooter() {
   return (
-    <footer className="border-t border-slate-200 bg-white px-6 py-12">
-      <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-6 sm:flex-row">
-        <div className="flex items-center gap-2 font-semibold text-slate-900">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-sm text-white">
+    <footer className="bg-land-deep px-6 py-6">
+      <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 sm:flex-row">
+        <Link href="/" className="flex items-center gap-2 font-semibold text-white">
+          <span
+            className="flex h-7 w-7 items-center justify-center rounded-md bg-land-forest text-xs text-white"
+            aria-hidden
+          >
             🧠
           </span>
           Slack Brain
-        </div>
-        <p className="text-sm text-slate-500">
-          Context Pack Engine · Verify before you prompt
-        </p>
-        <Link href="/signup" className="btn-accent">
-          Sign up
         </Link>
+        <p className="text-center text-xs text-white/45">
+          Verified context before AI · Context Pack Engine
+        </p>
+        <a
+          href="https://slackbrain.vercel.app"
+          className="font-mono text-xs text-white/45 transition hover:text-white/80"
+        >
+          slackbrain.vercel.app
+        </a>
       </div>
     </footer>
   );
