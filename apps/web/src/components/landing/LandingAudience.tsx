@@ -144,10 +144,10 @@ export function LandingAudience() {
             </ul>
           </div>
 
-          <div className="rounded-3xl bg-land-deep p-5 text-white shadow-xl sm:p-6">
+          <div className="rounded-3xl bg-gradient-to-br from-slate-900 via-indigo-950 to-violet-950 p-5 text-white shadow-xl sm:p-6">
             <div className="flex items-center justify-between gap-3">
               <p className="landing-mono-label text-white/50">{current.card.eyebrow}</p>
-              <span className="rounded-full bg-land-mint px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-wider text-land-deep">
+              <span className="rounded-full bg-violet-300 px-2.5 py-1 font-mono text-[10px] font-bold uppercase tracking-wider text-indigo-950">
                 {current.card.badge}
               </span>
             </div>
@@ -162,7 +162,7 @@ export function LandingAudience() {
                     <span
                       className={`flex h-5 w-5 items-center justify-center rounded-full border text-[10px] ${
                         c.done
-                          ? 'border-land-mint bg-land-mint text-land-deep'
+                          ? 'border-violet-300 bg-violet-300 text-indigo-950'
                           : 'border-white/30 text-transparent'
                       }`}
                     >
@@ -175,7 +175,7 @@ export function LandingAudience() {
             </div>
             <div className="mt-4 flex items-center justify-between text-xs">
               <span className="text-white/45">{current.card.footer}</span>
-              <span className="font-mono text-land-mint">{current.card.meta}</span>
+              <span className="font-mono text-violet-300">{current.card.meta}</span>
             </div>
           </div>
         </div>
