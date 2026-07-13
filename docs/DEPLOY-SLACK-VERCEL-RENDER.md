@@ -93,7 +93,7 @@ Vercel hosts the Next.js app **and** every Slack webhook route.
    | `GITHUB_TOKEN` | GitHub PAT |
    | `OLLAMA_ENABLED` | `true` (if using Ollama) |
    | `OLLAMA_BASE_URL` | your Ollama host (not `localhost` on Vercel) |
-   | `OLLAMA_CHAT_MODEL` | `llama3.2` |
+   | `OLLAMA_CHAT_MODEL` | `qwen2.5-coder:7b` |
    | `OLLAMA_EMBED_MODEL` | `nomic-embed-text` |
    | `EMBEDDINGS_PROVIDER` | `ollama` or `openai` |
 
