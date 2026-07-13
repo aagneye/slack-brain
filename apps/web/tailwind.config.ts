@@ -16,9 +16,22 @@ const config: Config = {
           mint: '#10b981',
           amber: '#f59e0b',
         },
+        land: {
+          cream: '#F6F5F1',
+          paper: '#FFFFFF',
+          forest: '#1E392A',
+          deep: '#121614',
+          ink: '#1A1A17',
+          muted: '#6B6B63',
+          line: '#E4E2DA',
+          mint: '#5EEAD4',
+          soft: '#E8F0EB',
+        },
       },
       fontFamily: {
-        sans: ['ui-sans-serif', 'system-ui', 'Inter', 'Segoe UI', 'sans-serif'],
+        sans: ['var(--font-landing-sans)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        display: ['var(--font-landing-display)', 'ui-serif', 'Georgia', 'serif'],
+        mono: ['var(--font-landing-mono)', 'ui-monospace', 'SFMono-Regular', 'monospace'],
       },
       boxShadow: {
         soft: '0 4px 24px -4px rgba(15, 23, 42, 0.08)',
