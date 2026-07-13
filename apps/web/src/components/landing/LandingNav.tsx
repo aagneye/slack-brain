@@ -23,6 +23,9 @@ export function LandingNav({ authed }: { authed: boolean }) {
           <a href="#results" className="transition hover:text-land-ink">
             Results
           </a>
+          <a href="#faq" className="transition hover:text-land-ink">
+            FAQ
+          </a>
           <a href="#team" className="transition hover:text-land-ink">
             Team
           </a>
