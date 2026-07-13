@@ -6,9 +6,9 @@ export function LandingTeam() {
         <h2 className="landing-h2 mt-3">Built for this.</h2>
 
         <div className="mt-10 max-w-xl">
-          <article className="flex gap-5 rounded-3xl border border-land-line bg-white p-5 shadow-soft sm:p-6">
+          <article className="flex gap-5 rounded-3xl border border-white/70 bg-white/80 p-5 shadow-soft backdrop-blur-sm sm:p-6">
             <div
-              className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-land-forest text-2xl font-bold text-white"
+              className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-indigo-500 to-violet-600 text-2xl font-bold text-white shadow-md"
               aria-hidden
             >
               A
