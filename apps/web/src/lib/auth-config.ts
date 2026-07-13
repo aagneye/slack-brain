@@ -50,7 +50,15 @@ export function getAuthConfig(): NextAuthConfig {
     debug: process.env.NODE_ENV === 'development',
     session: { strategy: 'jwt' },
     callbacks: {
-      async jwt({ token, profile }) {
+      async jwt({ token, profile, trigger, session }) {
+        // Client `update({ disconnectSlack: true })` clears workspace link without full sign-out.
+        if (trigger === 'update') {
+          const patch = session as { disconnectSlack?: boolean } | null;
+          if (patch?.disconnectSlack) {
+            delete token.slackTeamId;
+          }
+        }
+
         const slackProfile = profile as { 'https://slack.com/team_id'?: string } | undefined;
         if (slackProfile?.['https://slack.com/team_id']) {
           token.slackTeamId = slackProfile['https://slack.com/team_id'];
@@ -60,6 +68,8 @@ export function getAuthConfig(): NextAuthConfig {
       async session({ session, token }) {
         if (token.slackTeamId) {
           (session as { slackTeamId?: string }).slackTeamId = token.slackTeamId as string;
+        } else {
+          delete (session as { slackTeamId?: string }).slackTeamId;
         }
         return session;
       },
