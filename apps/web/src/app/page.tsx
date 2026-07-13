@@ -1,9 +1,13 @@
 import { auth } from '@/auth';
 import { LandingNav } from '@/components/landing/LandingNav';
 import { LandingHero } from '@/components/landing/LandingHero';
-import { LandingFeatures } from '@/components/landing/LandingFeatures';
-import { LandingBrainPreview } from '@/components/landing/LandingBrainPreview';
+import { LandingFlow } from '@/components/landing/LandingFlow';
+import { LandingLoop } from '@/components/landing/LandingLoop';
+import { LandingAudience } from '@/components/landing/LandingAudience';
+import { LandingProof } from '@/components/landing/LandingProof';
+import { LandingResults } from '@/components/landing/LandingResults';
 import { LandingTeam } from '@/components/landing/LandingTeam';
+import { LandingCta } from '@/components/landing/LandingCta';
 import { LandingFooter } from '@/components/landing/LandingFooter';
 import { isAuthenticatedSession } from '@/lib/auth-session';
 
@@ -12,12 +16,16 @@ export default async function HomePage() {
   const authed = isAuthenticatedSession(session);
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="landing-page min-h-screen">
       <LandingNav authed={authed} />
       <LandingHero authed={authed} />
-      <LandingFeatures />
-      <LandingBrainPreview />
+      <LandingFlow />
+      <LandingLoop />
+      <LandingAudience />
+      <LandingProof />
+      <LandingResults />
       <LandingTeam />
+      <LandingCta />
       <LandingFooter />
     </div>
   );
