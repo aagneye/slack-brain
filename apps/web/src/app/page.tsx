@@ -6,6 +6,7 @@ import { LandingLoop } from '@/components/landing/LandingLoop';
 import { LandingAudience } from '@/components/landing/LandingAudience';
 import { LandingProof } from '@/components/landing/LandingProof';
 import { LandingResults } from '@/components/landing/LandingResults';
+import { LandingFaq } from '@/components/landing/LandingFaq';
 import { LandingTeam } from '@/components/landing/LandingTeam';
 import { LandingCta } from '@/components/landing/LandingCta';
 import { LandingFooter } from '@/components/landing/LandingFooter';
@@ -24,6 +25,7 @@ export default async function HomePage() {
       <LandingAudience />
       <LandingProof />
       <LandingResults />
+      <LandingFaq />
       <LandingTeam />
       <LandingCta />
       <LandingFooter />
