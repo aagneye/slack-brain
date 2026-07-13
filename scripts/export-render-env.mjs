@@ -73,7 +73,7 @@ if (!vars.get('WORKER_CONCURRENCY')) vars.set('WORKER_CONCURRENCY', '4');
 
 if (!vars.get('OPENAI_API_KEY')?.trim() && !vars.get('ANTHROPIC_API_KEY')?.trim()) {
   if (!vars.get('OLLAMA_ENABLED')) vars.set('OLLAMA_ENABLED', 'true');
-  if (!vars.get('OLLAMA_CHAT_MODEL')) vars.set('OLLAMA_CHAT_MODEL', 'llama3.2');
+  if (!vars.get('OLLAMA_CHAT_MODEL')) vars.set('OLLAMA_CHAT_MODEL', 'qwen2.5-coder:7b');
   if (!vars.get('OLLAMA_EMBED_MODEL')) vars.set('OLLAMA_EMBED_MODEL', 'nomic-embed-text');
   if (!vars.get('EMBEDDINGS_PROVIDER')) vars.set('EMBEDDINGS_PROVIDER', 'ollama');
 }
